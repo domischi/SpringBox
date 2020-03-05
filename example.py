@@ -5,6 +5,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
+from scipy.spatial.distance import pdist, squareform
 import sys
 import time
 import os
@@ -12,7 +13,7 @@ import numba
 from videomaker import generate_video_from_png
 
 MAKE_VIDEO=True
-SAVEFIG=False
+SAVEFIG=True
 
 ex = Experiment('SpringBox')
 if SAVEFIG:
@@ -22,23 +23,28 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 
 @ex.config
 def cfg():
-    AR=1
-    L=1
-    n_part=500
+    AR=3/4
+    L=1.5
+    n_part=5000
     k=1
     epsilon=1
-    cutoff = L/np.sqrt(n_part)*2*(1+epsilon)
-    lower_cutoff = cutoff/25 # Thats what Matt used in his matlab code, I am not sure why though...
-    dt=.01
+    #cutoff = L/np.sqrt(n_part)*2*(1+epsilon)
+    #lower_cutoff = cutoff/25 # Thats what Matt used in his matlab code, I am not sure why though...
+    cutoff = 2.5/4
+    lower_cutoff = 0.1/4
+    dt=.0005
     m=1.
     T=10.
-    savefreq = None
+    savefreq = 10
     drag_factor=1
 
-#@ex.capture
 @numba.njit(parallel=True)
 def point_in_active_region(p, AR):
     return int(p[0]>-1 and p[0]<1 and p[1]>-AR and p[1]<AR)
+
+@numba.njit(parallel=True)
+def point_in_active_region_vec(ps, AR):
+    return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
 
 @ex.capture
 def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, AR,L, show_springs=False, fix_frame=True):
@@ -69,21 +75,18 @@ def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, A
         print('Something went wrong with closing the figure')
         pass
 
-@numba.njit
+@numba.jit
 def RHS(particles, cutoff, lower_cutoff,k, AR):
     rhs = np.zeros_like(particles)
     n_part=len(particles)
+    acc = point_in_active_region_vec(particles, AR)
+    Dij = squareform(pdist(particles)) * np.outer(acc,acc)
+    Dij = (Dij>lower_cutoff) * (Dij<cutoff)
     for i in range(n_part):
-        p1 = particles[i]
-        p1_acc = point_in_active_region(p1, AR) 
         for j in range(i+1,n_part):
-            p2 = particles[j]
-            p2_acc = point_in_active_region(p2, AR)
-            d = np.linalg.norm(p1-p2)
-            if (    d<cutoff 
-                and d>lower_cutoff):
-                rhs[i] += -k*p1_acc*p2_acc*(p1-p2)
-                rhs[j] += +k*p1_acc*p2_acc*(p1-p2)
+            if Dij[i,j]!=0:
+                rhs[i] += -k**(particles[i]-particles[j])
+                rhs[j] += +k**(particles[i]-particles[j])
     return rhs
 
 @ex.automain
