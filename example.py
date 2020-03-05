@@ -47,20 +47,11 @@ def point_in_active_region_vec(ps, AR):
     return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
 
 @ex.capture
-def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, AR,L, show_springs=False, fix_frame=True):
+def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, AR,L, fix_frame=True):
     fig=plt.figure(figsize=(12,10))
     vabs = np.linalg.norm(velocities, axis=1)
     sc=plt.scatter(particles[:,0],particles[:,1], c=vabs, cmap=plt.get_cmap('viridis'), vmin=0, vmax=max(vabs))
     plt.colorbar(sc)
-    if show_springs:
-        for p1 in tqdm(particles, total=len(particles), leave=False):
-            for p2 in particles:
-                if (    np.linalg.norm(p1-p2)<cutoff 
-                    and np.linalg.norm(p1-p2)>lower_cutoff 
-                    and point_in_active_region(p1, AR) 
-                    and point_in_active_region(p2, AR)):
-                    plt.plot( (p1[0],p2[0]) , (p1[1],p2[1]), color='k')
-    #plt.show()
     plt.title(f't={t:.2f}')
     if fix_frame:
         plt.xlim([-L,L])
