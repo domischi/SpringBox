@@ -5,12 +5,12 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
 import sys
 import time
 import os
 import numba
 from videomaker import generate_video_from_png
+from integrator import *
 
 MAKE_VIDEO=True
 SAVEFIG=True
@@ -38,14 +38,6 @@ def cfg():
     savefreq = 10
     drag_factor=1
 
-@numba.njit(parallel=True)
-def point_in_active_region(p, AR):
-    return int(p[0]>-1 and p[0]<1 and p[1]>-AR and p[1]<AR)
-
-@numba.njit(parallel=True)
-def point_in_active_region_vec(ps, AR):
-    return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
-
 @ex.capture
 def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, AR,L, fix_frame=True):
     fig=plt.figure(figsize=(12,10))
@@ -66,20 +58,6 @@ def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, A
         print('Something went wrong with closing the figure')
         pass
 
-@numba.jit
-def RHS(particles, cutoff, lower_cutoff,k, AR):
-    rhs = np.zeros_like(particles)
-    n_part=len(particles)
-    acc = point_in_active_region_vec(particles, AR)
-    Dij = squareform(pdist(particles)) * np.outer(acc,acc)
-    Dij = (Dij>lower_cutoff) * (Dij<cutoff)
-    for i in range(n_part):
-        for j in range(i+1,n_part):
-            if Dij[i,j]!=0:
-                rhs[i] += -k*(particles[i]-particles[j])
-                rhs[j] += +k*(particles[i]-particles[j])
-    return rhs
-
 @ex.automain
 def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff):
     imagefolder = f'/tmp/boxspring-{int(time.time())}'
@@ -87,8 +65,7 @@ def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff):
     particles = (np.random.rand(n_part,2)-.5)*2*L
     velocities = np.zeros_like(particles)
     for i in tqdm(range(int(T/dt))):
-        particles = particles + dt * velocities
-        velocities = (1-drag_factor)*velocities + dt/m * RHS(particles,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR)
+        particles, velocities = integrate_one_timestep(particles, velocities, dt=dt, m=m,cutoff=cutoff,lower_cutoff=lower_cutoff,k=k,AR=AR, drag_factor=drag_factor)
         if savefreq!=None and i%savefreq == 0:
             plot_points(particles, velocities, i, cutoff,lower_cutoff, imagefolder, t=i*dt)
     if MAKE_VIDEO:
