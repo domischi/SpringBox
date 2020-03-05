@@ -50,7 +50,7 @@ def point_in_active_region_vec(ps, AR):
 def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, AR,L, show_springs=False, fix_frame=True):
     fig=plt.figure(figsize=(12,10))
     vabs = np.linalg.norm(velocities, axis=1)
-    sc=plt.scatter(particles[:,0],particles[:,1], c=vabs, cmap=plt.get_cmap('hot'), vmin=0, vmax=2*max(vabs))
+    sc=plt.scatter(particles[:,0],particles[:,1], c=vabs, cmap=plt.get_cmap('viridis'), vmin=0, vmax=max(vabs))
     plt.colorbar(sc)
     if show_springs:
         for p1 in tqdm(particles, total=len(particles), leave=False):
