@@ -43,7 +43,7 @@ def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff):
     for i in tqdm(range(int(T/dt))):
         particles, velocities = integrate_one_timestep(particles, velocities, dt=dt, m=m,cutoff=cutoff,lower_cutoff=lower_cutoff,k=k,AR=AR, drag_factor=drag_factor)
         if savefreq!=None and i%savefreq == 0:
-            plot_points(particles, velocities, i, cutoff=cutoff,lower_cutoff=lower_cutoff, image_folder=imagefolder, t=i*dt, AR=AR, L=L, SAVEFIG=SAVEFIG, ex=ex)
+            plot_points(particles, velocities, i, cutoff=cutoff,lower_cutoff=lower_cutoff, image_folder=imagefolder, title=f'cutoff={cutoff:.2f}, t={i*dt:.3f}', AR=AR, L=L, SAVEFIG=SAVEFIG, ex=ex)
     if MAKE_VIDEO:
         video_path = generate_video_from_png(imagefolder)
         if SAVEFIG:

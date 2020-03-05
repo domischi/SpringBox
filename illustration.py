@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 
-def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, t, AR,L, fix_frame=True, SAVEFIG=True, ex=None):
+def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, title, AR,L, fix_frame=True, SAVEFIG=True, ex=None):
     fig=plt.figure(figsize=(12,10))
     vabs = np.linalg.norm(velocities, axis=1)
     sc=plt.scatter(particles[:,0],particles[:,1], c=vabs, cmap=plt.get_cmap('viridis'), vmin=0, vmax=max(vabs))
     plt.colorbar(sc)
-    plt.title(f't={t:.2f}')
+    plt.title(title)
     if fix_frame:
         plt.xlim([-L,L])
         plt.ylim([-L,L])
