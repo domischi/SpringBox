@@ -32,9 +32,9 @@ def cfg():
     #lower_cutoff = cutoff/25 # Thats what Matt used in his matlab code, I am not sure why though...
     cutoff = 2.5/4
     lower_cutoff = 0.1/4
-    dt=.0005
+    dt=.005
     m=1.
-    T=10.
+    T=4
     savefreq = 10
     drag_factor=1
 
@@ -97,7 +97,7 @@ def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff):
     velocities = np.zeros_like(particles)
     for i in tqdm(range(int(T/dt))):
         particles = particles + dt * velocities
-        velocities = (1-drag_factor)*velocities + dt/m * RHS(particles,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR) ## this should be the infinite drag case, right
+        velocities = (1-drag_factor)*velocities + dt/m * RHS(particles,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR)
         if savefreq!=None and i%savefreq == 0:
             plot_points(particles, velocities, i, cutoff,lower_cutoff, imagefolder, t=i*dt)
     if MAKE_VIDEO:
