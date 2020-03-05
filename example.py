@@ -85,8 +85,8 @@ def RHS(particles, cutoff, lower_cutoff,k, AR):
     for i in range(n_part):
         for j in range(i+1,n_part):
             if Dij[i,j]!=0:
-                rhs[i] += -k**(particles[i]-particles[j])
-                rhs[j] += +k**(particles[i]-particles[j])
+                rhs[i] += -k*(particles[i]-particles[j])
+                rhs[j] += +k*(particles[i]-particles[j])
     return rhs
 
 @ex.automain
