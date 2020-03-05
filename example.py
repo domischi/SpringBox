@@ -9,7 +9,7 @@ import sys
 import time
 import os
 import numba
-from videomaker import generate_video_from_png
+from illustration import *
 from integrator import *
 
 MAKE_VIDEO=True
@@ -27,9 +27,7 @@ def cfg():
     L=1.5
     n_part=5000
     k=1
-    epsilon=1
-    #cutoff = L/np.sqrt(n_part)*2*(1+epsilon)
-    #lower_cutoff = cutoff/25 # Thats what Matt used in his matlab code, I am not sure why though...
+    ## Matt's values
     cutoff = 2.5/4
     lower_cutoff = 0.1/4
     dt=.005
