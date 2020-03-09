@@ -14,7 +14,7 @@ MAKE_VIDEO=True
 SAVEFIG=True
 
 ex = Experiment('SpringBox')
-if SAVEFIG:
+if SAVEFIG or MAKE_VIDEO:
     ex.observers.append(FileStorageObserver.create('data'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
@@ -46,5 +46,4 @@ def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff):
             plot_points(particles, velocities, i, cutoff=cutoff,lower_cutoff=lower_cutoff, image_folder=imagefolder, title=f'cutoff={cutoff:.2f}, t={i*dt:.3f}', AR=AR, L=L, SAVEFIG=SAVEFIG, ex=ex)
     if MAKE_VIDEO:
         video_path = generate_video_from_png(imagefolder)
-        if SAVEFIG:
-            ex.add_artifact(video_path)
+        ex.add_artifact(video_path)
