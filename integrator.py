@@ -22,7 +22,24 @@ def RHS(particles, cutoff, lower_cutoff,k, AR, r0):
     return rhs
 
 @numba.jit
-def integrate_one_timestep(particles, velocities, dt, m , cutoff, lower_cutoff, k, AR, drag_factor, r0=r0):
+def get_grid_pairs(L,res=32):
+    gridX = np.linspace(-L,L,32)
+    XY = np.array(np.meshgrid(gridX,gridX)).reshape(2,res*res).T
+    return XY
+
+@numba.jit
+def fluid_velocities_on_grid(ps, vs, L, mu=1):
+    XY = get_grid_pairs(L)
+    vf = np.zeros_like(XY)
+    for p1,v1 in zip(ps,vs):
+        dX = XY-p1
+        l=np.linalg.norm(dX, axis=1)
+        vf += np.outer(-np.log(l),v1) + np.multiply(dX.T,np.dot(dX,v1)/l**2).T ## TODO there seems to be a problem... this is not symmetric for AR = 1
+    return XY, vf/(8*np.pi*mu)
+
+@numba.jit
+def integrate_one_timestep(particles, velocities, dt, m , cutoff, lower_cutoff, k, AR, drag_factor, r0, L):
     particles = particles + dt * velocities
-    velocities = (1-drag_factor)*velocities + dt/m * RHS(particles,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR)
-    return particles, velocities
+    velocities = (1-drag_factor)*velocities + dt/m * RHS(particles,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR, r0=r0)
+    fs, vf = fluid_velocities_on_grid(particles, velocities,L)
+    return particles, velocities, fs, vf

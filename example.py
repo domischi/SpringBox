@@ -42,9 +42,10 @@ def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff, r
     particles = (np.random.rand(n_part,2)-.5)*2*L
     velocities = np.zeros_like(particles)
     for i in tqdm(range(int(T/dt))):
-        particles, velocities = integrate_one_timestep(particles, velocities, dt=dt, m=m,cutoff=cutoff,lower_cutoff=lower_cutoff,k=k,AR=AR, drag_factor=drag_factor, r0=r0)
+        particles, velocities, fluid_grid, vf = integrate_one_timestep(particles, velocities, dt=dt, m=m,cutoff=cutoff,lower_cutoff=lower_cutoff,k=k,AR=AR, drag_factor=drag_factor, r0=r0, L=L)
         if savefreq!=None and i%savefreq == 0:
             plot_points(particles, velocities, i, cutoff=cutoff,lower_cutoff=lower_cutoff, image_folder=imagefolder, title=f'cutoff={cutoff:.2f}, t={i*dt:.3f}', AR=AR, L=L, SAVEFIG=SAVEFIG, ex=ex)
+            plot_fluid(fluid_grid, vf, i, imagefolder, title=f'cutoff={cutoff:.2f}, t={i*dt:.3f}',L=L, SAVEFIG=False)
     if MAKE_VIDEO:
         video_path = generate_video_from_png(imagefolder)
         ex.add_artifact(video_path)

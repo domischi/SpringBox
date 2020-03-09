@@ -6,6 +6,25 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 
+def plot_fluid(fs, vf,i,  image_folder, title,L,fix_frame=True, SAVEFIG=True, ex=None):
+    fig=plt.figure(figsize=(10,10))
+    vabs = np.linalg.norm(vf,axis=1)
+    X = np.linspace(min(fs.flatten()),max(fs.flatten()),int(np.sqrt(len(fs)))) ## a bit of a hack, but it works for now
+    X,Y = np.meshgrid(X,X)
+    qc=plt.quiver(X,Y, vf[:,0],vf[:,1], vabs , units='xy', pivot='mid', scale=.1)
+    plt.title(title)
+    if fix_frame:
+        plt.xlim([-L,L])
+        plt.ylim([-L,L])
+    IMG_NAME=f'{image_folder}/fluid{i:08}.png'
+    plt.savefig(IMG_NAME)
+    if SAVEFIG:
+        ex.add_artifact(IMG_NAME)
+    try:
+        plt.close(fig)
+    except:
+        print('Something went wrong with closing the figure')
+
 def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, title, AR,L, fix_frame=True, SAVEFIG=True, ex=None):
     fig=plt.figure(figsize=(12,10))
     vabs = np.linalg.norm(velocities, axis=1)
@@ -23,8 +42,6 @@ def plot_points(particles, velocities, i,cutoff,lower_cutoff, image_folder, titl
         plt.close(fig)
     except:
         print('Something went wrong with closing the figure')
-        pass
-
 
 def generate_video_from_png(image_folder):
     images = sorted([img for img in os.listdir(image_folder) if img.endswith(".png")])
