@@ -21,16 +21,15 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 
 @ex.config
 def cfg():
-    AR=3/4
-    L=1.5
+    AR=1.
+    L=2
     n_part=5000
-    k=1
-    ## Matt's values
-    cutoff = 2.5/4
-    lower_cutoff = 0.1/4
+    cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
+    lower_cutoff = cutoff/25
+    k=1.
     dt=.005
     m=1.
-    T=4
+    T=3
     savefreq = 10
     r0=0.2
     drag_factor=1
