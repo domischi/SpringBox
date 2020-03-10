@@ -1,7 +1,9 @@
 from sacred import Experiment, SETTINGS
 from sacred.observers import FileStorageObserver, MongoObserver
 from sacred.utils import apply_backspaces_and_linefeeds
-from tqdm import tqdm
+from functools import partial
+from tqdm import tqdm as std_tqdm
+tqdm = partial(std_tqdm, ncols=100)
 import numpy as np
 import sys
 import time
