@@ -50,7 +50,7 @@ def plot_points(ax, pXs, pVs):
     vabs = np.linalg.norm(pVs, axis=1)
     sc=plt.scatter(pXs[:,0],pXs[:,1], c=vabs, cmap=plt.get_cmap('viridis'), vmin=0, vmax=max(vabs))
 
-def plot_data(pXs, pVs, fXs, fVs, i, image_folder, title, L, fix_frame=True, SAVEFIG=True, ex=None, plot_particles=True, plot_fluids=True, side_by_side=False):
+def plot_data(pXs, pVs, fXs, fVs, i, image_folder, title, L, fix_frame=True, SAVEFIG=True, ex=None, plot_particles=True, plot_fluids=True, side_by_side=False, fluid_plot_type='streamplot', fluid_coloring_scheme='vabs'):
     if not (plot_particles or plot_fluids):
         print('Plotting without anyting to plot. Raising exception...')
         raise RuntimeError
@@ -64,7 +64,7 @@ def plot_data(pXs, pVs, fXs, fVs, i, image_folder, title, L, fix_frame=True, SAV
     if plot_particles:
         plot_points(axl, pXs, pVs)
     if plot_fluids:
-        plot_fluid(axr, fXs, fVs)
+        plot_fluid(axr, fXs, fVs, plot_type = fluid_plot_type, coloring_scheme=fluid_coloring_scheme)
 
     fig.suptitle(title)
     if fix_frame:
