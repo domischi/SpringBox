@@ -10,8 +10,8 @@ import numba
 from illustration import *
 from integrator import *
 
-MAKE_VIDEO=True
-SAVEFIG=True
+MAKE_VIDEO= True
+SAVEFIG   = True
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
@@ -37,15 +37,14 @@ def cfg():
 
 @ex.automain
 def main(AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff, r0):
-    imagefolder = f'/tmp/boxspring-{int(time.time())}'
-    os.makedirs(imagefolder)
+    image_folder = f'/tmp/boxspring-{int(time.time())}'
+    os.makedirs(image_folder)
     pXs = (np.random.rand(n_part,2)-.5)*2*L
     pVs = np.zeros_like(pXs)
     for i in tqdm(range(int(T/dt))):
         pXs, pVs, fXs, fVs = integrate_one_timestep(pXs, pVs, dt=dt, m=m,cutoff=cutoff,lower_cutoff=lower_cutoff,k=k,AR=AR, drag_factor=drag_factor, r0=r0, L=L)
         if savefreq!=None and i%savefreq == 0:
-            plot_points(pXs, pVs, i, cutoff=cutoff,lower_cutoff=lower_cutoff, image_folder=imagefolder, title=f'cutoff={cutoff:.2f}, t={i*dt:.3f}', AR=AR, L=L, SAVEFIG=SAVEFIG, ex=ex)
-            plot_fluid(fXs, fVs, i, imagefolder, title=f'cutoff={cutoff:.2f}, t={i*dt:.3f}',L=L, SAVEFIG=False)
+            plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=L, fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True)
     if MAKE_VIDEO:
-        video_path = generate_video_from_png(imagefolder)
+        video_path = generate_video_from_png(image_folder)
         ex.add_artifact(video_path)
