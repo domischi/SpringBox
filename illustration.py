@@ -4,13 +4,19 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 
-def plot_fluid(ax, fXs, fVs):
+def plot_fluid(ax, fXs, fVs, plot_type='streamplot'):
     plt.sca(ax)
     vabs = np.linalg.norm(fVs,axis=1)
     plt.title('Fluids')
-    X = np.linspace(min(fXs.flatten()),max(fXs.flatten()),int(np.sqrt(len(fXs)))) ## a bit of a hack, but it works for now
-    X,Y = np.meshgrid(X,X)
-    qc=plt.quiver(X,Y, fVs[:,0],fVs[:,1], vabs , units='xy', pivot='mid', scale=1)
+    ng = int(np.sqrt(len(fXs)))
+    X = np.linspace(min(fXs.flatten()),max(fXs.flatten()), ng) ## a bit of a hack, but it works for now
+    if plot_type == 'quiver':
+        X,Y = np.meshgrid(X,X)
+        p=plt.quiver(X,Y, fVs[:,0],fVs[:,1], vabs , units='xy', pivot='mid')
+    elif plot_type == 'streamplot':
+        p=plt.streamplot(X,X, fVs[:,0].reshape(ng,ng),fVs[:,1].reshape(ng,ng), color=vabs.reshape(ng,ng))
+    else:
+        print('Illegal type of fluid plot. Check the code.')
 
 def plot_points(ax, pXs, pVs):
     plt.sca(ax)
