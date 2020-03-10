@@ -28,14 +28,19 @@ def get_grid_pairs(L,res=32):
     return XY
 
 @numba.jit
+def fVs_on_points(ps, pXs, pVs, mu=1):
+    fVs = np.zeros_like(ps)
+    for p,v in zip(pXs,pVs):
+        dX = ps-p
+        l=np.linalg.norm(dX, axis=1)
+        ind = np.nonzero(l) # Only update when the norm is non vanishing (important when ps == pXs)
+        fVs[ind] += (np.outer(-np.log(l),v) + np.multiply(dX.T,np.dot(dX,v)/l**2).T)[ind]
+    return fVs/(8*np.pi*mu)
+
+@numba.jit
 def fVs_on_grid(pXs, pVs, L, mu=1):
     fXs = get_grid_pairs(L)
-    fVs = np.zeros_like(fXs)
-    for p,v in zip(pXs,pVs):
-        dX = fXs-p
-        l=np.linalg.norm(dX, axis=1)
-        fVs += np.outer(-np.log(l),v) + np.multiply(dX.T,np.dot(dX,v)/l**2).T
-    return fXs, fVs/(8*np.pi*mu)
+    return fXs, fVs_on_points(fXs, pXs, pVs, mu=mu)
 
 @numba.jit
 def integrate_one_timestep(pXs, pVs, dt, m , cutoff, lower_cutoff, k, AR, drag_factor, r0, L, get_fluid_velocity=False):
