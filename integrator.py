@@ -38,8 +38,11 @@ def fVs_on_grid(pXs, pVs, L, mu=1):
     return fXs, fVs/(8*np.pi*mu)
 
 @numba.jit
-def integrate_one_timestep(pXs, pVs, dt, m , cutoff, lower_cutoff, k, AR, drag_factor, r0, L):
+def integrate_one_timestep(pXs, pVs, dt, m , cutoff, lower_cutoff, k, AR, drag_factor, r0, L, get_fluid_velocity=False):
     pXs = pXs + dt * pVs
     pVs = (1-drag_factor)*pVs + dt/m * RHS(pXs,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR, r0=r0)
-    fXs, fVs = fVs_on_grid(pXs, pVs, L)
-    return pXs, pVs, fXs, fVs
+    if get_fluid_velocity:
+        fXs, fVs = fVs_on_grid(pXs, pVs, L)
+        return pXs, pVs, fXs, fVs
+    else:
+        return pXs, pVs, None, None
