@@ -36,8 +36,8 @@ def cfg():
     AR = 1.
     L=2
     n_part=5000
-    
-    ## Interaction parameters 
+
+    ## Interaction parameters
     cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
     lower_cutoff = cutoff/25
     k=1.
@@ -50,22 +50,36 @@ def cfg():
     drag_factor=1
 
 
-#TODO go for less magic....
 @ex.automain
-def main(run_id, AR, n_part, cutoff, dt, m,T,k, savefreq, L, drag_factor,lower_cutoff, r0, mu, Rdrag, use_interpolated_fluid_velocities):
+def main(_config):
+    ## Load local copies of the parameters needed in main
+    dt = _config['dt']
+    T = _config['T']
+    n_part = _config['n_part']
+    L = _config['L']
+    savefreq = _config['savefreq']
+    run_id = _config['run_id']
+
+    ## Setup Folders
     timestamp = int(time.time())
     image_folder = f'/tmp/boxspring-{run_id}-{timestamp}'
     os.makedirs(image_folder)
+
+    ## Initialize particles
     pXs = (np.random.rand(n_part,2)-.5)*2*L
     pVs = np.zeros_like(pXs)
-    if use_interpolated_fluid_velocities:
+
+    if _config['use_interpolated_fluid_velocities']:
         print('WARNING: Using interpolated fluid velocities can yield disagreements. The interpolation is correct for most points. However, for some the difference can be relatively large.')
-    time.sleep(3) # To have the output of all other runs finished
+
+    time.sleep(3) # Required in multiprocessing environment to not overwrite any other output
+
+    ## Integration loop
     for i in tqdm(range(int(T/dt)), position=run_id):
         plotting_this_iteration = savefreq!=None and i%savefreq == 0
-        pXs, pVs, fXs, fVs = integrate_one_timestep(pXs, pVs, dt=dt, m=m,cutoff=cutoff,lower_cutoff=lower_cutoff,k=k,AR=AR, drag_factor=drag_factor, r0=r0, L=L, mu=mu, Rdrag=Rdrag, get_fluid_velocity=plotting_this_iteration, use_interpolated_fluid_velocities=use_interpolated_fluid_velocities)
+        pXs, pVs, fXs, fVs = integrate_one_timestep(pXs, pVs, _config=_config, get_fluid_velocity=plotting_this_iteration, use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
         if plotting_this_iteration:
-            plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=L, fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
+            plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
     if MAKE_VIDEO:
         video_path = generate_video_from_png(image_folder)
-        ex.add_artifact(video_path, name=f'video-{AR:.2f}.avi')
+        ex.add_artifact(video_path, name=f"video-{_config['AR']:.2f}.avi")

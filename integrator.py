@@ -9,13 +9,15 @@ def point_in_active_region(ps, AR):
     return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
 
 @numba.jit
-def RHS(pXs, cutoff, lower_cutoff,k, AR, r0):
+def RHS(pXs, _config):
     rhs = np.zeros_like(pXs)
-    n_part=len(pXs)
-    acc = point_in_active_region(pXs, AR)
+    n_part=_config['n_part']
+    k=_config['k']
+    r0=_config['r0']
+    acc = point_in_active_region(pXs, _config['AR'])
     Dij = squareform(pdist(pXs))
     Iij = Dij * np.outer(acc,acc)
-    Iij = (Iij>lower_cutoff) * (Iij<cutoff)
+    Iij = (Iij>_config['lower_cutoff']) * (Iij<_config['cutoff'])
     for i in range(n_part):
         for j in range(i+1,n_part):
             if Iij[i,j]!=0:
@@ -61,28 +63,28 @@ def fVs_on_particles(pXs, pVs, L, mu=1, res=32, spline_degree=3):
     return np.array((fVs_x,fVs_y)).T
 
 @numba.jit
-def integrate_one_timestep(pXs, pVs, dt, m , cutoff, lower_cutoff, k, AR, drag_factor, r0, L, mu, Rdrag, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+def integrate_one_timestep(pXs, pVs, _config={}, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+    dt = _config['dt']
+    Rdrag = _config['Rdrag']
+    mu = _config['mu']
     pXs = pXs + dt * pVs
-    pVs = (1-drag_factor)*pVs + dt/m * RHS(pXs,cutoff=cutoff, lower_cutoff=lower_cutoff,k=k, AR=AR, r0=r0)
+    pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * RHS(pXs, _config=_config)
     if Rdrag > 0:
-        # Rdrag determines the size of the fluid to object coupling. Each of the particles is assumed to follow 3D Stokes drag (F_d=6*pi*mu*Rdrag*v) where Rdrag is the radius of an equivalent sphere
-    # This might be a bad approximation due to Stokes paradox, stating that the problem is ill defined in 2D
-    # The drag in the 2D case is rather radius independent and depends on the Reynolds number. However, since all particles are assumed to be the same, and the Reynolds number stays constant as well, this parametrization is still valid.
         if use_interpolated_fluid_velocities:
-            fVs = fVs_on_particles(pXs, pVs, L, res=32, spline_degree=3)
+            fVs = fVs_on_particles(pXs, pVs, L=_config['L'], res=32, spline_degree=3)
         else:
             fVs = fVs_on_points(pXs, pXs, pVs)
         if DEBUG_INTERPOLATION:
             if use_interpolated_velocities:
                 fVs2 = fVs_on_points(pXs, pXs, pVs)
             else:
-                fVs2 = fVs_on_particles(pXs, pVs, L, res=32, spline_degree=3)
+                fVs2 = fVs_on_particles(pXs, pVs, _config['L'], res=32, spline_degree=3)
             plt.quiver(pXs[:,0],pXs[:,1], fVs_interp[:,0], fVs_interp[:,1], color='red')
             plt.quiver(pXs[:,0],pXs[:,1], fVs_direct[:,0], fVs_direct[:,1], color='green')
             plt.show(block=True)
-        pVs += 6*np.pi*mu*Rdrag*fVs_on_particles(pXs, pVs, L, mu=mu)
+        pVs += 6*np.pi*mu*Rdrag*fVs_on_particles(pXs, pVs, _config['L'], mu=mu) # TODO don't compute it twice
     if get_fluid_velocity:
-        fXs, fVs = fVs_on_grid(pXs, pVs, L, mu=mu)
+        fXs, fVs = fVs_on_grid(pXs, pVs, _config['L'], mu=mu)
         return pXs, pVs, fXs, fVs
     else:
         return pXs, pVs, None, None
