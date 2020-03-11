@@ -82,7 +82,7 @@ def integrate_one_timestep(pXs, pVs, _config={}, get_fluid_velocity=False, use_i
             plt.quiver(pXs[:,0],pXs[:,1], fVs [:,0], fVs [:,1], color='red')
             plt.quiver(pXs[:,0],pXs[:,1], fVs2[:,0], fVs2[:,1], color='green')
             plt.show(block=True)
-        pVs += 6*np.pi*mu*Rdrag*fVs_on_particles(pXs, pVs, _config['L'], mu=mu) # TODO don't compute it twice
+        pVs += 6*np.pi*mu*Rdrag*fVs
     if get_fluid_velocity:
         fXs, fVs = fVs_on_grid(pXs, pVs, _config['L'], mu=mu)
         return pXs, pVs, fXs, fVs
