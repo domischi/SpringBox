@@ -24,23 +24,31 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 
 @ex.config
 def cfg():
-    run_id = 0 
+    ## Simulation parameters
+    run_id = 0
+    savefreq = None
+    # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
+    use_interpolated_fluid_velocities = True
+    dt=.01
+    T=1
+
+    ## Geometry parameters
     AR = 1.
     L=2
     n_part=5000
+    
+    ## Interaction parameters 
     cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
     lower_cutoff = cutoff/25
     k=1.
-    dt=.02
-    m=1.
-    mu=1.
-    Rdrag = .01
-    T=4
-    savefreq = 10
     r0=0.2
+    m=1.
+
+    ## Fluid parameters
+    mu=1.
+    Rdrag = .05
     drag_factor=1
-    # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
-    use_interpolated_fluid_velocities = True
+
 
 #TODO go for less magic....
 @ex.automain
