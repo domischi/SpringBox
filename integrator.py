@@ -71,16 +71,16 @@ def integrate_one_timestep(pXs, pVs, _config={}, get_fluid_velocity=False, use_i
     pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * RHS(pXs, _config=_config)
     if Rdrag > 0:
         if use_interpolated_fluid_velocities:
-            fVs = fVs_on_particles(pXs, pVs, L=_config['L'], res=32, spline_degree=3)
+            fVs = fVs_on_particles(pXs, pVs, L=_config['L'], res=32, spline_degree=3, mu=mu)
         else:
-            fVs = fVs_on_points(pXs, pXs, pVs)
+            fVs = fVs_on_points(pXs, pXs, pVs, mu=mu)
         if DEBUG_INTERPOLATION:
             if use_interpolated_velocities:
-                fVs2 = fVs_on_points(pXs, pXs, pVs)
+                fVs2 = fVs_on_points(pXs, pXs, pVs, mu=mu)
             else:
-                fVs2 = fVs_on_particles(pXs, pVs, _config['L'], res=32, spline_degree=3)
-            plt.quiver(pXs[:,0],pXs[:,1], fVs_interp[:,0], fVs_interp[:,1], color='red')
-            plt.quiver(pXs[:,0],pXs[:,1], fVs_direct[:,0], fVs_direct[:,1], color='green')
+                fVs2 = fVs_on_particles(pXs, pVs, _config['L'], res=32, spline_degree=3, mu=mu)
+            plt.quiver(pXs[:,0],pXs[:,1], fVs [:,0], fVs [:,1], color='red')
+            plt.quiver(pXs[:,0],pXs[:,1], fVs2[:,0], fVs2[:,1], color='green')
             plt.show(block=True)
         pVs += 6*np.pi*mu*Rdrag*fVs_on_particles(pXs, pVs, _config['L'], mu=mu) # TODO don't compute it twice
     if get_fluid_velocity:
