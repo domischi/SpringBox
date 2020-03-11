@@ -68,7 +68,7 @@ def integrate_one_timestep(pXs, pVs, dt, m , cutoff, lower_cutoff, k, AR, drag_f
         # Rdrag determines the size of the fluid to object coupling. Each of the particles is assumed to follow 3D Stokes drag (F_d=6*pi*mu*Rdrag*v) where Rdrag is the radius of an equivalent sphere
     # This might be a bad approximation due to Stokes paradox, stating that the problem is ill defined in 2D
     # The drag in the 2D case is rather radius independent and depends on the Reynolds number. However, since all particles are assumed to be the same, and the Reynolds number stays constant as well, this parametrization is still valid.
-        if use_interpolated_velocities:
+        if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, L, res=32, spline_degree=3)
         else:
             fVs = fVs_on_points(pXs, pXs, pVs)
