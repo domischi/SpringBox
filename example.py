@@ -7,6 +7,7 @@ tqdm = partial(std_tqdm, ncols=100)
 import numpy as np
 import sys
 import time
+import datetime
 import os
 import numba
 from illustration import *
@@ -18,7 +19,8 @@ SAVEFIG   = False
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
-    ex.observers.append(FileStorageObserver.create('data'))
+   ex.observers.append(MongoObserver.create())
+   #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
 
@@ -83,4 +85,4 @@ def main(_config):
             plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
     if MAKE_VIDEO:
         video_path = generate_video_from_png(image_folder)
-        ex.add_artifact(video_path, name=f"video-{_config['AR']:.2f}.avi")
+        ex.add_artifact(video_path, name=f"video.avi")
