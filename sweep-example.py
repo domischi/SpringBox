@@ -14,7 +14,7 @@ drag_radii = [.01]
 space = itertools.product(drag_radii,ARs)
 
 def f(x):
-    config_updates = {'run_id': x[0], 'AR': x[1][1], 'Rdrag': x[1][0]}
+    config_updates = {'sweep_experiment': True,'run_id': x[0], 'AR': x[1][1], 'Rdrag': x[1][0]}
     assert(config_updates['AR']>0)
     ex.run(config_updates=config_updates)
 

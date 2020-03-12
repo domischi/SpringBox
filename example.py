@@ -25,8 +25,9 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 @ex.config
 def cfg():
     ## Simulation parameters
+    sweep_experiment = False
     run_id = 0
-    savefreq = None
+    savefreq = 3
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     use_interpolated_fluid_velocities = True
     dt=.01
@@ -75,7 +76,7 @@ def main(_config):
     time.sleep(3) # Required in multiprocessing environment to not overwrite any other output
 
     ## Integration loop
-    for i in tqdm(range(int(T/dt)), position=run_id):
+    for i in tqdm(range(int(T/dt)), position=run_id, disable = _config['sweep_experiment']):
         plotting_this_iteration = savefreq!=None and i%savefreq == 0
         pXs, pVs, fXs, fVs = integrate_one_timestep(pXs, pVs, _config=_config, get_fluid_velocity=plotting_this_iteration, use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
         if plotting_this_iteration:
