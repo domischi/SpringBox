@@ -34,7 +34,7 @@ def plot_fluid(ax, fXs, fVs, plot_type='streamplot', coloring_scheme='vabs'):
     elif coloring_scheme == 'vabs':
         c = np.linalg.norm(fVs,axis=1)
         cmap = 'viridis'
-    else: 
+    else:
         print('Illegal coloring_scheme in fluid plot. Check the code.')
         return
     if plot_type == 'quiver':
