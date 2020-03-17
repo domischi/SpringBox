@@ -12,6 +12,7 @@ import os
 import numba
 from illustration import *
 from integrator import *
+from activation import *
 import multiprocessing
 
 MAKE_VIDEO= True
@@ -19,7 +20,8 @@ SAVEFIG   = False
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
-    ex.observers.append(MongoObserver.create())
+    pass
+    #ex.observers.append(MongoObserver.create())
     #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
@@ -35,7 +37,8 @@ def cfg():
     dt=.01
     T=1
 
-    ## Geometry parameters
+    ## Geometry parameters / Activation Fn
+    activation_fn_type = 'const-rectangle' # For the possible choices, see the activation.py file
     AR = 1.
     L=2
     n_part=5000
@@ -90,7 +93,14 @@ def main(_config):
     ## Integration loop
     for i in tqdm(range(int(T/dt)), position=run_id, disable = _config['sweep_experiment']):
         plotting_this_iteration = savefreq!=None and i%savefreq == 0
-        pXs, pVs, acc, fXs, fVs = integrate_one_timestep(pXs, pVs, acc, _config=_config, get_fluid_velocity=plotting_this_iteration, use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
+        activation_fn = activation_fn_dispatcher(_config, i*dt)
+        pXs, pVs, acc, fXs, fVs = integrate_one_timestep(pXs = pXs,
+                                                         pVs = pVs,
+                                                         acc = acc,
+                                                         activation_fn = activation_fn,
+                                                         _config = _config,
+                                                         get_fluid_velocity=plotting_this_iteration,
+                                                         use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
         if plotting_this_iteration:
             plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
     if MAKE_VIDEO:

@@ -42,12 +42,12 @@ def fVs_on_particles(pXs, pVs, L, mu=1, res=32, spline_degree=3):
     return np.array((fVs_x,fVs_y)).T
 
 @numba.jit
-def integrate_one_timestep(pXs, pVs, acc, _config={}, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+def integrate_one_timestep(pXs, pVs, acc, activation_fn, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
     mu = _config['mu']
     pXs = pXs + dt * pVs
-    rhs, acc = RHS(pXs, acc, _config=_config)
+    rhs, acc = RHS(pXs, acc,activation_fn, _config=_config)
     pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * rhs
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
