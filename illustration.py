@@ -69,9 +69,11 @@ def plot_data(pXs, pVs, fXs, fVs, i, image_folder, title, L, fix_frame=True, SAV
         plot_fluid(axr, fXs, fVs, plot_type = fluid_plot_type, coloring_scheme=fluid_coloring_scheme)
 
     fig.suptitle(title)
-    if fix_frame:
-        plt.xlim([-L,L])
-        plt.ylim([-L,L])
+    for ax in (axl,axr):
+        plt.sca(ax)
+        if fix_frame:
+            plt.xlim([-L,L])
+            plt.ylim([-L,L])
     plt.tight_layout()
 
     IMG_NAME=f'{image_folder}/fig{i:08}.png'
