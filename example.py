@@ -19,7 +19,8 @@ SAVEFIG   = False
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
-    ex.observers.append(MongoObserver.create())
+    pass
+    #ex.observers.append(MongoObserver.create())
     #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
@@ -41,12 +42,15 @@ def cfg():
     n_part=5000
 
     ## Interaction parameters
-    cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
-    lower_cutoff = cutoff/25
-    k=1.
-    r0=0.2
+    # Particle properties
     m=1.
     activation_decay_rate = 10. # Ex. at dt=0.01 this leads to an average deactivation of 10% of the particles
+    # Spring properties
+    spring_cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
+    spring_lower_cutoff = spring_cutoff/25
+    spring_k=1.
+    spring_r0=0.2
+    # Brownian properties
     brownian_motion_delta = 0.05
 
     ## Fluid parameters

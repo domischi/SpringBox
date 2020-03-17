@@ -18,12 +18,12 @@ def active_particles(pXs, prv_acc, _config):
 def RHS(pXs, prv_acc, _config):
     rhs = np.zeros_like(pXs)
     n_part=_config['n_part']
-    k=_config['k']
-    r0=_config['r0']
+    k=_config['spring_k']
+    r0=_config['spring_r0']
     acc = active_particles(pXs, prv_acc, _config)
     Dij = squareform(pdist(pXs))
     Iij = Dij * np.outer(acc,acc)
-    Iij = (Iij>_config['lower_cutoff']) * (Iij<_config['cutoff'])
+    Iij = (Iij>_config['spring_lower_cutoff']) * (Iij<_config['spring_cutoff'])
     for i in range(n_part):
         for j in range(i+1,n_part):
             if Iij[i,j]!=0:
