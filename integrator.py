@@ -76,6 +76,8 @@ def integrate_one_timestep(pXs, pVs, acc, _config={}, get_fluid_velocity=False, 
     Rdrag = _config['Rdrag']
     mu = _config['mu']
     pXs = pXs + dt * pVs
+    if _config['brownian_motion_delta'] > 0:
+         pXs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape)
     rhs, acc = RHS(pXs, acc, _config=_config)
     pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * rhs
     if Rdrag > 0:

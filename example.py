@@ -47,6 +47,7 @@ def cfg():
     r0=0.2
     m=1.
     activation_decay_rate = 10. # Ex. at dt=0.01 this leads to an average deactivation of 10% of the particles
+    brownian_motion_delta = 0.05
 
     ## Fluid parameters
     mu=1.
