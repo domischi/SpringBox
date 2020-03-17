@@ -20,8 +20,7 @@ SAVEFIG   = False
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
-    pass
-    #ex.observers.append(MongoObserver.create())
+    ex.observers.append(MongoObserver.create())
     #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
@@ -36,12 +35,15 @@ def cfg():
     use_interpolated_fluid_velocities = True
     dt=.01
     T=1
+    n_part=5000
 
     ## Geometry parameters / Activation Fn
-    activation_fn_type = 'const-rectangle' # For the possible choices, see the activation.py file
-    AR = 1.
+    activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
+    activation_circle_radius = .5
+    v_circ = np.array([2/T, 0])
+    x_0_circ = np.array([-1,0])
+    #AR = 1.
     L=2
-    n_part=5000
 
     ## Interaction parameters
     # Particle properties
