@@ -19,8 +19,7 @@ SAVEFIG   = False
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
-    pass
-    #ex.observers.append(MongoObserver.create())
+    ex.observers.append(MongoObserver.create())
     #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
@@ -50,8 +49,12 @@ def cfg():
     spring_lower_cutoff = spring_cutoff/25
     spring_k=1.
     spring_r0=0.2
+    # LJ properties
+    LJ_eps=.1
+    LJ_r0=.05
+    LJ_cutoff=2.5/1.122*LJ_r0 # canonical choice
     # Brownian properties
-    brownian_motion_delta = 0.05
+    brownian_motion_delta = 0.01
 
     ## Fluid parameters
     mu=1.
