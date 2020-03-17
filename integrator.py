@@ -9,12 +9,20 @@ def point_in_active_region(ps, AR):
     return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
 
 @numba.jit
-def RHS(pXs, _config):
+def active_particles(pXs, prv_acc, _config):
+    # Particles that were previously active, now can loose their activation with a rate of activation_decay_rate
+    prv_acc = prv_acc * (np.random.rand(len(prv_acc)) > _config['activation_decay_rate'] * _config['dt'])
+    # Or particles can become active when they enter the light activated area
+    new_acc = point_in_active_region(pXs, _config['AR'])
+    return np.maximum(prv_acc, new_acc)
+
+@numba.jit
+def RHS(pXs, prv_acc, _config):
     rhs = np.zeros_like(pXs)
     n_part=_config['n_part']
     k=_config['k']
     r0=_config['r0']
-    acc = point_in_active_region(pXs, _config['AR'])
+    acc = active_particles(pXs, prv_acc, _config)
     Dij = squareform(pdist(pXs))
     Iij = Dij * np.outer(acc,acc)
     Iij = (Iij>_config['lower_cutoff']) * (Iij<_config['cutoff'])
@@ -23,7 +31,7 @@ def RHS(pXs, _config):
             if Iij[i,j]!=0:
                 rhs[i] += -k*((Dij[i,j]-r0)/Dij[i,j])*(pXs[i]-pXs[j])
                 rhs[j] += +k*((Dij[i,j]-r0)/Dij[i,j])*(pXs[i]-pXs[j])
-    return rhs
+    return rhs, acc
 
 @numba.jit
 def get_linear_grid(L,res=32):
@@ -63,12 +71,13 @@ def fVs_on_particles(pXs, pVs, L, mu=1, res=32, spline_degree=3):
     return np.array((fVs_x,fVs_y)).T
 
 @numba.jit
-def integrate_one_timestep(pXs, pVs, _config={}, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+def integrate_one_timestep(pXs, pVs, acc, _config={}, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
     mu = _config['mu']
     pXs = pXs + dt * pVs
-    pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * RHS(pXs, _config=_config)
+    rhs, acc = RHS(pXs, acc, _config=_config)
+    pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * rhs
     if Rdrag > 0:
         if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, L=_config['L'], res=32, spline_degree=3, mu=mu)
@@ -85,6 +94,6 @@ def integrate_one_timestep(pXs, pVs, _config={}, get_fluid_velocity=False, use_i
         pVs += 6*np.pi*mu*Rdrag*fVs
     if get_fluid_velocity:
         fXs, fVs = fVs_on_grid(pXs, pVs, _config['L'], mu=mu)
-        return pXs, pVs, fXs, fVs
+        return pXs, pVs, acc, fXs, fVs
     else:
-        return pXs, pVs, None, None
+        return pXs, pVs, acc, None, None

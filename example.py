@@ -19,8 +19,8 @@ SAVEFIG   = False
 
 ex = Experiment('SpringBox')
 if SAVEFIG or MAKE_VIDEO:
-   ex.observers.append(MongoObserver.create())
-   #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
+    ex.observers.append(MongoObserver.create())
+    #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
 
@@ -46,6 +46,7 @@ def cfg():
     k=1.
     r0=0.2
     m=1.
+    activation_decay_rate = 10. # Ex. at dt=0.01 this leads to an average deactivation of 10% of the particles
 
     ## Fluid parameters
     mu=1.
@@ -71,6 +72,7 @@ def main(_config):
     ## Initialize particles
     pXs = (np.random.rand(n_part,2)-.5)*2*L
     pVs = np.zeros_like(pXs)
+    acc = np.zeros(len(pXs))
 
     if _config['use_interpolated_fluid_velocities']:
         print('WARNING: Using interpolated fluid velocities can yield disagreements. The interpolation is correct for most points. However, for some the difference can be relatively large.')
@@ -80,7 +82,7 @@ def main(_config):
     ## Integration loop
     for i in tqdm(range(int(T/dt)), position=run_id, disable = _config['sweep_experiment']):
         plotting_this_iteration = savefreq!=None and i%savefreq == 0
-        pXs, pVs, fXs, fVs = integrate_one_timestep(pXs, pVs, _config=_config, get_fluid_velocity=plotting_this_iteration, use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
+        pXs, pVs, acc, fXs, fVs = integrate_one_timestep(pXs, pVs, acc, _config=_config, get_fluid_velocity=plotting_this_iteration, use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
         if plotting_this_iteration:
             plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
     if MAKE_VIDEO:
