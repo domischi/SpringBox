@@ -76,10 +76,10 @@ def integrate_one_timestep(pXs, pVs, acc, _config={}, get_fluid_velocity=False, 
     Rdrag = _config['Rdrag']
     mu = _config['mu']
     pXs = pXs + dt * pVs
-    if _config['brownian_motion_delta'] > 0:
-         pXs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape)
     rhs, acc = RHS(pXs, acc, _config=_config)
     pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * rhs
+    if _config['brownian_motion_delta'] > 0:
+         pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
     if Rdrag > 0:
         if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, L=_config['L'], res=32, spline_degree=3, mu=mu)
