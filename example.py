@@ -10,6 +10,9 @@ import time
 import datetime
 import os
 import numba
+from numba.errors import NumbaWarning
+import warnings
+warnings.simplefilter('ignore', category=NumbaWarning)
 from illustration import *
 from integrator import *
 from activation import *

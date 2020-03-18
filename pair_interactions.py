@@ -2,7 +2,6 @@ import numba
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
-@numba.jit
 def active_particles(pXs, prv_acc, activation_fn, _config):
     # Particles that were previously active, now can loose their activation with a rate of activation_decay_rate
     prv_acc = prv_acc * (np.random.rand(len(prv_acc)) > _config['activation_decay_rate'] * _config['dt'])

@@ -4,17 +4,14 @@ from scipy.interpolate import RectBivariateSpline
 import matplotlib.pyplot as plt
 from pair_interactions import RHS
 
-@numba.jit
 def get_linear_grid(L,res=32):
     return np.linspace(-L,L,res)
 
-@numba.jit
 def get_grid_pairs(L,res=32):
     gridX = get_linear_grid(L,res)
     XY = np.array(np.meshgrid(gridX,gridX)).reshape(2,res*res).T
     return XY
 
-@numba.jit
 def fVs_on_points(ps, pXs, pVs, mu=1):
     fVs = np.zeros_like(ps)
     for p,v in zip(pXs,pVs):
@@ -26,12 +23,10 @@ def fVs_on_points(ps, pXs, pVs, mu=1):
         fVs[ind] += np.outer(-np.log(lp),v) + np.multiply(dXp.T,np.dot(dXp,v)/lp**2).T
     return fVs/(8*np.pi*mu)
 
-@numba.jit
 def fVs_on_grid(pXs, pVs, L, mu=1, res=32):
     fXs = get_grid_pairs(L, res)
     return fXs, fVs_on_points(fXs, pXs, pVs, mu=mu)
 
-@numba.jit
 def fVs_on_particles(pXs, pVs, L, mu=1, res=32, spline_degree=3):
     fXs_grid, fVs_grid = fVs_on_grid(pXs, pVs, L, mu, res=res)
     gridX = get_linear_grid(L,res)
@@ -41,7 +36,6 @@ def fVs_on_particles(pXs, pVs, L, mu=1, res=32, spline_degree=3):
     fVs_y = func_fV_y.ev(pXs[:,0], pXs[:,1])
     return np.array((fVs_x,fVs_y)).T
 
-@numba.jit
 def integrate_one_timestep(pXs, pVs, acc, activation_fn, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']

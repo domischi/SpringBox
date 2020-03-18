@@ -1,11 +1,8 @@
-import numba
 import numpy as np
 
-@numba.njit(parallel=True)
 def rectangle_activation(ps, AR):
     return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
 
-@numba.jit()
 def moving_circle_activation(ps, x_center, R):
     return (np.linalg.norm(ps-x_center,axis=1)<R)
 
