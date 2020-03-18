@@ -47,7 +47,7 @@ def create_and_destroy_particles(pXs, pVs, _config, sim_info):
     x_min_new = sim_info['x_min']
     x_min_old = x_min_new-dt*vx
     x_max_new = sim_info['x_max']
-    x_max_old = x_min_new-dt*vx
+    x_max_old = x_max_new-dt*vx
     ind_x = np.nonzero( pXs[:,0]<x_min_new )
     pXs[ind_x,0] = np.random.rand(len(ind_x))*(x_max_new-x_max_old)+x_max_old
     pXs[ind_x,1] = np.random.rand(len(ind_x))*2*L-L
