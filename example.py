@@ -40,11 +40,13 @@ def cfg():
     T=1
     n_part=5000
 
+    window_velocity = np.array([2/T,0])
+
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
     activation_circle_radius = .5
     v_circ = np.array([2/T, 0])
-    x_0_circ = np.array([-1,0])
+    x_0_circ = np.array([0,0])
     #AR = 1.
     L=2
 
@@ -79,6 +81,8 @@ def main(_config):
     L = _config['L']
     savefreq = _config['savefreq']
     run_id = _config['run_id']
+    vx = _config['window_velocity'][0]
+    vy = _config['window_velocity'][1]
 
     ## Setup Folders
     timestamp = int(time.time())
@@ -95,19 +99,29 @@ def main(_config):
 
     time.sleep(3) # Required in multiprocessing environment to not overwrite any other output
 
+    ## Initialize information dict
+    sim_info = dict()
+
     ## Integration loop
     for i in tqdm(range(int(T/dt)), position=run_id, disable = _config['sweep_experiment']):
         plotting_this_iteration = savefreq!=None and i%savefreq == 0
         activation_fn = activation_fn_dispatcher(_config, i*dt)
+        sim_info['t']     = i*dt
+        sim_info['time_step_index'] = i
+        sim_info['x_min'] = -L+dt*vx*i
+        sim_info['y_min'] = -L+dt*vy*i
+        sim_info['x_max'] =  L+dt*vx*i
+        sim_info['y_max'] =  L+dt*vy*i
         pXs, pVs, acc, fXs, fVs = integrate_one_timestep(pXs = pXs,
                                                          pVs = pVs,
                                                          acc = acc,
                                                          activation_fn = activation_fn,
+                                                         sim_info = sim_info,
                                                          _config = _config,
                                                          get_fluid_velocity=plotting_this_iteration,
                                                          use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
         if plotting_this_iteration:
-            plot_data(pXs, pVs, fXs, fVs, i, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
+            plot_data(pXs, pVs, fXs, fVs, sim_info, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
     if MAKE_VIDEO:
         video_path = generate_video_from_png(image_folder)
         ex.add_artifact(video_path, name=f"video.avi")
