@@ -45,6 +45,7 @@ def RHS(pXs, prv_acc, activation_fn, _config):
     rhs = np.zeros_like(pXs)
     acc = active_particles(pXs, prv_acc, activation_fn, _config)
     Dij = squareform(pdist(pXs))
+    np.clip(Dij, 1e-6, None, out = Dij)
     ## Spring
     if _config['spring_k']>0:
         rhs += spring_forces(acc,pXs,Dij,_config)
