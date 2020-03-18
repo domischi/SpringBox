@@ -36,7 +36,25 @@ def fVs_on_particles(pXs, pVs, L, mu=1, res=32, spline_degree=3):
     fVs_y = func_fV_y.ev(pXs[:,0], pXs[:,1])
     return np.array((fVs_x,fVs_y)).T
 
-def integrate_one_timestep(pXs, pVs, acc, activation_fn, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+def create_and_destroy_particles(pXs, pVs, _config, i):
+    ## TODO generalize for any velocity vector
+    dt = _config['dt']
+    L = _config['L']
+    vx = _config['window_velocity'][0]
+    vy = _config['window_velocity'][1]
+    assert(vx > 0) # at least for now
+    assert(vy == 0)
+    x_min_old = -L+dt*vx*(i-1)
+    x_min_new = -L+dt*vx*i
+    x_max_old =  L+dt*vx*(i-1)
+    x_max_new =  L+dt*vx*i
+    ind_x = np.nonzero( pXs[:,0]<x_min_new )
+    pXs[ind_x,0] = np.random.rand(len(ind_x))*(x_max_new-x_max_old)+x_max_old
+    pXs[ind_x,1] = np.random.rand(len(ind_x))*2*L-L
+    pVs[ind_x] = np.zeros(shape=(len(ind_x),2))
+    return pXs, pVs
+
+def integrate_one_timestep(pXs, pVs, acc, activation_fn, time_step_index, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
     mu = _config['mu']
@@ -45,6 +63,8 @@ def integrate_one_timestep(pXs, pVs, acc, activation_fn, _config, get_fluid_velo
     pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * rhs
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
+    if np.linalg.norm(_config['window_velocity']) > 0:
+        pXs, pVs = create_and_destroy_particles(pXs, pVs, _config, time_step_index)
     if Rdrag > 0:
         if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, L=_config['L'], res=32, spline_degree=3, mu=mu)
