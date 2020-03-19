@@ -66,6 +66,8 @@ def cfg():
     LJ_cutoff=2.5/1.122*LJ_r0 # canonical choice
     # Brownian properties
     brownian_motion_delta = 0.01
+    # Particle Fusion
+    particle_fusion_distance = 1e-3
 
     ## Fluid parameters
     mu=1.
