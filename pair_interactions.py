@@ -32,6 +32,7 @@ def LJ_forces(acc,pXs , Dij, _config):
     r0_6=r0**6
     LJ_pre = 12*eps*r0_6
     Dij6 = Dij**6
+    np.clip(Dij6, 1e-6, None, out = Dij6)
     Iij = (Dij<_config['LJ_cutoff']) * np.outer(acc,acc)
     for i in range(n_part):
         for j in range(i+1,n_part):
