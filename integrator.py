@@ -36,23 +36,31 @@ def fVs_on_particles(pXs, pVs, sim_info, mu=1, res=32, spline_degree=3):
     fVs_y = func_fV_y.ev(pXs[:,0], pXs[:,1])
     return np.array((fVs_x,fVs_y)).T
 
-def create_and_destroy_particles(pXs, pVs, _config, sim_info):
+def create_and_destroy_particles(pXs, pVs, acc, _config, sim_info):
     ## TODO generalize for any velocity vector
     dt = _config['dt']
     L = _config['L']
     vx = _config['window_velocity'][0]
     vy = _config['window_velocity'][1]
-    assert(vx > 0) # at least for now
-    assert(vy == 0)
+    assert(vx >= 0) # at least for now
+    assert(vy >= 0)
     x_min_new = sim_info['x_min']
     x_min_old = x_min_new-dt*vx
     x_max_new = sim_info['x_max']
     x_max_old = x_max_new-dt*vx
+    y_min_new = sim_info['y_min']
+    y_min_old = y_min_new-dt*vy
+    y_max_new = sim_info['y_max']
+    y_max_old = y_max_new-dt*vy
     ind_x = np.nonzero( pXs[:,0]<x_min_new )
+    ind_y = np.nonzero( pXs[:,1]<y_min_new )
     pXs[ind_x,0] = np.random.rand(len(ind_x))*(x_max_new-x_max_old)+x_max_old
-    pXs[ind_x,1] = np.random.rand(len(ind_x))*2*L-L
+    pXs[ind_y,1] = np.random.rand(len(ind_y))*(y_max_new-y_max_old)+y_max_old
     pVs[ind_x] = np.zeros(shape=(len(ind_x),2))
-    return pXs, pVs
+    pVs[ind_y] = np.zeros(shape=(len(ind_x),2))
+    acc[ind_x] = np.zeros(shape=len(ind_x))
+    acc[ind_y] = np.zeros(shape=len(ind_x))
+    return pXs, pVs, acc
 
 def integrate_one_timestep(pXs, pVs, acc, activation_fn, sim_info, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
@@ -64,7 +72,7 @@ def integrate_one_timestep(pXs, pVs, acc, activation_fn, sim_info, _config, get_
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
     if np.linalg.norm(_config['window_velocity']) > 0:
-        pXs, pVs = create_and_destroy_particles(pXs, pVs, _config, sim_info)
+        pXs, pVs, acc = create_and_destroy_particles(pXs, pVs, acc, _config, sim_info)
     if Rdrag > 0:
         if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, sim_info=sim_info, res=32, spline_degree=3, mu=mu)
