@@ -53,7 +53,7 @@ def cfg():
 
     ## Interaction parameters
     # Particle properties
-    m=1.
+    m_init=1.
     activation_decay_rate = 10. # Ex. at dt=0.01 this leads to an average deactivation of 10% of the particles
     # Spring properties
     spring_cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
@@ -94,6 +94,7 @@ def main(_config):
     pXs = (np.random.rand(n_part,2)-.5)*2*L
     pVs = np.zeros_like(pXs)
     acc = np.zeros(len(pXs))
+    ms  = _config['m_init']*np.ones(len(pXs))
 
     if _config['use_interpolated_fluid_velocities']:
         print('WARNING: Using interpolated fluid velocities can yield disagreements. The interpolation is correct for most points. However, for some the difference can be relatively large.')
@@ -113,9 +114,10 @@ def main(_config):
         sim_info['y_min'] = -L+dt*vy*i
         sim_info['x_max'] =  L+dt*vx*i
         sim_info['y_max'] =  L+dt*vy*i
-        pXs, pVs, acc, fXs, fVs = integrate_one_timestep(pXs = pXs,
+        pXs, pVs, acc, ms, fXs, fVs = integrate_one_timestep(pXs = pXs,
                                                          pVs = pVs,
                                                          acc = acc,
+                                                         ms  = ms,
                                                          activation_fn = activation_fn,
                                                          sim_info = sim_info,
                                                          _config = _config,

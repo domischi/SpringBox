@@ -62,13 +62,13 @@ def create_and_destroy_particles(pXs, pVs, acc, _config, sim_info):
     acc[ind_y] = np.zeros(shape=len(ind_x))
     return pXs, pVs, acc
 
-def integrate_one_timestep(pXs, pVs, acc, activation_fn, sim_info, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
     mu = _config['mu']
     pXs = pXs + dt * pVs
     rhs, acc = RHS(pXs, acc,activation_fn, _config=_config)
-    pVs = (1-_config['drag_factor'])*pVs + dt/_config['m'] * rhs
+    pVs = (1-_config['drag_factor'])*pVs + dt * rhs / ms[:,np.newaxis]
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
     if np.linalg.norm(_config['window_velocity']) > 0:
@@ -89,6 +89,6 @@ def integrate_one_timestep(pXs, pVs, acc, activation_fn, sim_info, _config, get_
         pVs += 6*np.pi*mu*Rdrag*fVs
     if get_fluid_velocity:
         fXs, fVs = fVs_on_grid(pXs, pVs, sim_info=sim_info, mu=mu)
-        return pXs, pVs, acc, fXs, fVs
+        return pXs, pVs, acc, ms, fXs, fVs
     else:
-        return pXs, pVs, acc, None, None
+        return pXs, pVs, acc, ms, None, None
