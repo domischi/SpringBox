@@ -37,18 +37,19 @@ def cfg():
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     use_interpolated_fluid_velocities = True
     dt=.01
-    T=1
+    T=4
     n_part=5000
 
-    window_velocity = np.array([2/T,0])
 
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
     activation_circle_radius = .5
-    v_circ = np.array([2/T, 0])
+    v_circ = np.array([.25, 0. ])
     x_0_circ = np.array([0,0])
     #AR = 1.
     L=2
+
+    window_velocity = v_circ
 
     ## Interaction parameters
     # Particle properties
