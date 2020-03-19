@@ -94,7 +94,7 @@ def generate_video_from_png(image_folder, video_length=10):
         height, width, layers = frame.shape
         video_path=f'{image_folder}/video.avi'
 
-        video = cv2.VideoWriter(video_path, 0, fps, (width,height))
+        video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'H264'), fps, (width,height))
 
         for image in images:
             video.write(cv2.imread(os.path.join(image_folder, image)))
