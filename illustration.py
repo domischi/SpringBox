@@ -85,7 +85,7 @@ def plot_data(pXs, pVs, fXs, fVs, sim_info, image_folder, title, L, fix_frame=Tr
     except:
         print('Something went wrong with closing the figure')
 
-def generate_video_from_png(image_folder, video_length=10):
+def generate_video_from_png(image_folder, video_length=10, do_h264 = False):
 # Adapted from answer by BoboDarph (Stackoverflow: https://stackoverflow.com/questions/44947505/how-to-make-a-movie-out-of-images-in-python)
     images = sorted([img for img in os.listdir(image_folder) if img.endswith(".png")])
     if len(images)>0:
@@ -93,8 +93,11 @@ def generate_video_from_png(image_folder, video_length=10):
         frame = cv2.imread(os.path.join(image_folder, images[0]))
         height, width, layers = frame.shape
         video_path=f'{image_folder}/video.avi'
-
-        video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'H264'), fps, (width,height))
+        
+        if do_h264:
+            video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'H264'), fps, (width,height))
+        else:
+            video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), fps, (width,height))
 
         for image in images:
             video.write(cv2.imread(os.path.join(image_folder, image)))
