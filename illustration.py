@@ -5,6 +5,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
+from integrator import get_linear_grid
 
 def get_fluid_colors(fXs, fVs, normalize=False):
     ## I realized that with limited data, this coloring does not make much sense
@@ -20,11 +21,10 @@ def get_fluid_colors(fXs, fVs, normalize=False):
     return np.array(ret)
 
 
-def plot_fluid(ax, fXs, fVs, plot_type='streamplot', coloring_scheme='vabs'):
+def plot_fluid(ax, fXs, fVs, sim_info = dict() ,plot_type='streamplot', coloring_scheme='vabs'):
     plt.sca(ax)
     plt.title('Fluids')
     ng = int(np.sqrt(len(fXs)))
-    X = np.linspace(min(fXs.flatten()),max(fXs.flatten()), ng) ## a bit of a hack, but it works for now
     if coloring_scheme == 'io':
         c = get_fluid_colors(fXs,fVs)
         cmap = 'bwr'
@@ -38,10 +38,10 @@ def plot_fluid(ax, fXs, fVs, plot_type='streamplot', coloring_scheme='vabs'):
         print('Illegal coloring_scheme in fluid plot. Check the code.')
         return
     if plot_type == 'quiver':
-        X,Y = np.meshgrid(X,X)
-        p=plt.quiver(X,Y, fVs[:,0],fVs[:,1], c, cmap=cmap , units='xy', pivot='mid')
+        p=plt.quiver(fXs[:,0],fXs[:,1], fVs[:,0],fVs[:,1], c, cmap=cmap , units='xy', pivot='mid')
     elif plot_type == 'streamplot':
-        p=plt.streamplot(X,X, fVs[:,0].reshape(ng,ng),fVs[:,1].reshape(ng,ng), color=c.reshape(ng,ng), cmap=cmap)
+        X,Y = get_linear_grid(sim_info)
+        p=plt.streamplot(X,Y, fVs[:,0].reshape(ng,ng),fVs[:,1].reshape(ng,ng), color=c.reshape(ng,ng), cmap=cmap)
     else:
         print('Illegal type of fluid plot. Check the code.')
         return
@@ -66,7 +66,7 @@ def plot_data(pXs, pVs, fXs, fVs, sim_info, image_folder, title, L, fix_frame=Tr
     if plot_particles:
         plot_points(axl, pXs, pVs)
     if plot_fluids:
-        plot_fluid(axr, fXs, fVs, plot_type = fluid_plot_type, coloring_scheme=fluid_coloring_scheme)
+        plot_fluid(axr, fXs, fVs, sim_info=sim_info, plot_type = fluid_plot_type, coloring_scheme=fluid_coloring_scheme)
 
     fig.suptitle(title)
     for ax in (axl,axr):

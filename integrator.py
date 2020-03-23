@@ -10,7 +10,7 @@ def get_linear_grid(sim_info,res=32):
 
 def get_grid_pairs(sim_info,res=32):
     gridX, gridY = get_linear_grid(sim_info,res)
-    XY = np.array(np.meshgrid(gridX,gridY)).reshape(2,res*res).T
+    XY = np.array(np.meshgrid(gridX,gridY)).reshape(2,res*res)
     return XY
 
 def fVs_on_points(ps, pXs, pVs, mu=1):
@@ -25,7 +25,7 @@ def fVs_on_points(ps, pXs, pVs, mu=1):
     return fVs/(8*np.pi*mu)
 
 def fVs_on_grid(pXs, pVs, sim_info, mu=1, res=32):
-    fXs = get_grid_pairs(sim_info, res)
+    fXs = get_grid_pairs(sim_info, res).T
     return fXs, fVs_on_points(fXs, pXs, pVs, mu=mu)
 
 def fVs_on_particles(pXs, pVs, sim_info, mu=1, res=32, spline_degree=3):
