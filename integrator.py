@@ -68,25 +68,28 @@ def create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info):
     y_min_old = y_min_new-dt*vy
     y_max_new = sim_info['y_max']
     y_max_old = y_max_new-dt*vy
-    ind_x = np.nonzero( pXs[:,0]<x_min_new )
-    ind_y = np.nonzero( pXs[:,1]<y_min_new )
+    ind_x = np.nonzero( pXs[:,0]<x_min_new )[0]
+    ind_y = np.nonzero( pXs[:,1]<y_min_new )[0]
     ind_f = []
     ## Fusion process
     if _config['particle_fusion_distance']>0.:
         pXs, pVs, ms, acc, ind_f = particle_fusion(pXs, pVs, ms, acc, n_part=_config['n_part'], r=_config['particle_fusion_distance'], minit=_config['m_init'], Dij = squareform(pdist(pXs)))
-
     pXs[ind_x,0] = np.random.rand(len(ind_x))*(x_max_new-x_max_old)+x_max_old
+    pXs[ind_x,1] = np.random.rand(len(ind_x))*(y_max_new-y_min_new)+y_min_new
+    pXs[ind_y,0] = np.random.rand(len(ind_y))*(x_max_new-x_min_new)+x_min_new
     pXs[ind_y,1] = np.random.rand(len(ind_y))*(y_max_new-y_max_old)+y_max_old
     if vx > 0:
         pXs[ind_f,0] = np.random.rand(len(ind_f))*(x_max_new-x_max_old)+x_max_old
+        pXs[ind_f,1] = np.random.rand(len(ind_f))*(y_max_new-y_min_new)+y_min_new
     elif vy > 0:
+        pXs[ind_f,0] = np.random.rand(len(ind_f))*(x_max_new-x_min_new)+x_min_new
         pXs[ind_f,1] = np.random.rand(len(ind_f))*(y_max_new-y_max_old)+y_max_old
     pVs[ind_x] = np.zeros(shape=(len(ind_x),2))
-    pVs[ind_y] = np.zeros(shape=(len(ind_x),2))
-    pVs[ind_f] = np.zeros(shape=(len(ind_x),2))
+    pVs[ind_y] = np.zeros(shape=(len(ind_y),2))
+    pVs[ind_f] = np.zeros(shape=(len(ind_f),2))
     acc[ind_x] = np.zeros(shape=len(ind_x))
-    acc[ind_y] = np.zeros(shape=len(ind_x))
-    acc[ind_f] = np.zeros(shape=len(ind_x))
+    acc[ind_y] = np.zeros(shape=len(ind_y))
+    acc[ind_f] = np.zeros(shape=len(ind_f))
     return pXs, pVs, acc
 
 def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
