@@ -5,7 +5,6 @@ from functools import partial
 from tqdm import tqdm as std_tqdm
 tqdm = partial(std_tqdm, ncols=100)
 import numpy as np
-import sys
 import time
 import datetime
 import os
@@ -13,18 +12,14 @@ import numba
 from numba.errors import NumbaWarning
 import warnings
 warnings.simplefilter('ignore', category=NumbaWarning)
-from illustration import *
-from integrator import *
+from integrator import integrate_one_timestep
 from activation import *
-import multiprocessing
-
-MAKE_VIDEO= True
-SAVEFIG   = False
+from post_run_hooks import post_run_hooks
+from measurements import do_measurements
 
 ex = Experiment('SpringBox')
-if SAVEFIG or MAKE_VIDEO:
-    ex.observers.append(MongoObserver.create())
-    #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
+ex.observers.append(MongoObserver.create())
+#ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
 SETTINGS.CAPTURE_MODE = 'sys'
 ex.captured_out_filter = apply_backspaces_and_linefeeds
 
@@ -39,7 +34,8 @@ def cfg():
     dt=.01
     T=4
     n_part=5000
-
+    MAKE_VIDEO = True
+    SAVEFIG    = False
 
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
@@ -76,7 +72,7 @@ def cfg():
 
 
 @ex.automain
-def main(_config):
+def main(_config, _run):
     ## Load local copies of the parameters needed in main
     dt = _config['dt']
     T = _config['T']
@@ -89,8 +85,8 @@ def main(_config):
 
     ## Setup Folders
     timestamp = int(time.time())
-    image_folder = f'/tmp/boxspring-{run_id}-{timestamp}'
-    os.makedirs(image_folder)
+    data_dir = f'/tmp/boxspring-{run_id}-{timestamp}'
+    os.makedirs(data_dir)
 
     ## Initialize particles
     pXs = (np.random.rand(n_part,2)-.5)*2*L
@@ -101,10 +97,8 @@ def main(_config):
     if _config['use_interpolated_fluid_velocities']:
         print('WARNING: Using interpolated fluid velocities can yield disagreements. The interpolation is correct for most points. However, for some the difference can be relatively large.')
 
-    time.sleep(3) # Required in multiprocessing environment to not overwrite any other output
-
     ## Initialize information dict
-    sim_info = dict()
+    sim_info = {'data_dir': data_dir} 
 
     ## Integration loop
     for i in tqdm(range(int(T/dt)), position=run_id, disable = _config['sweep_experiment']):
@@ -125,8 +119,5 @@ def main(_config):
                                                          _config = _config,
                                                          get_fluid_velocity=plotting_this_iteration,
                                                          use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
-        if plotting_this_iteration:
-            plot_data(pXs, pVs, fXs, fVs, sim_info, image_folder=image_folder, title=f't={i*dt:.3f}', L=_config['L'], fix_frame=True, SAVEFIG=SAVEFIG, ex=ex, plot_particles=True, plot_fluids=True, side_by_side=True, fluid_plot_type = 'quiver')
-    if MAKE_VIDEO:
-        video_path = generate_video_from_png(image_folder)
-        ex.add_artifact(video_path, name=f"video.avi")
+        do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, plotting_this_iteration)
+    post_run_hooks(ex, _config, _run, data_dir)
