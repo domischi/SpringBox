@@ -70,18 +70,26 @@ def cfg():
     Rdrag = .05
     drag_factor=1
 
+def get_sim_info(old_sim_info, _config, i):
+    sim_info = old_sim_info
+    dt = _config['dt']
+    L = _config['L']
+    vx = _config['window_velocity'][0]
+    vy = _config['window_velocity'][1]
+    savefreq = _config['savefreq']
+    sim_info['t']     = i*dt
+    sim_info['time_step_index'] = i
+    sim_info['x_min'] = -L+dt*vx*i
+    sim_info['y_min'] = -L+dt*vy*i
+    sim_info['x_max'] =  L+dt*vx*i
+    sim_info['y_max'] =  L+dt*vy*i
+    sim_info['plotting_this_iteration'] = (savefreq!=None and i%savefreq == 0)
+    return sim_info
 
 @ex.automain
 def main(_config, _run):
     ## Load local copies of the parameters needed in main
-    dt = _config['dt']
-    T = _config['T']
-    n_part = _config['n_part']
-    L = _config['L']
-    savefreq = _config['savefreq']
     run_id = _config['run_id']
-    vx = _config['window_velocity'][0]
-    vy = _config['window_velocity'][1]
 
     ## Setup Folders
     timestamp = int(time.time())
@@ -89,7 +97,7 @@ def main(_config, _run):
     os.makedirs(data_dir)
 
     ## Initialize particles
-    pXs = (np.random.rand(n_part,2)-.5)*2*L
+    pXs = (np.random.rand(_config['n_part'],2)-.5)*2*_config['L']
     pVs = np.zeros_like(pXs)
     acc = np.zeros(len(pXs))
     ms  = _config['m_init']*np.ones(len(pXs))
@@ -98,26 +106,21 @@ def main(_config, _run):
         print('WARNING: Using interpolated fluid velocities can yield disagreements. The interpolation is correct for most points. However, for some the difference can be relatively large.')
 
     ## Initialize information dict
-    sim_info = {'data_dir': data_dir} 
+    sim_info = {'data_dir': data_dir}
 
     ## Integration loop
-    for i in tqdm(range(int(T/dt)), position=run_id, disable = _config['sweep_experiment']):
-        plotting_this_iteration = savefreq!=None and i%savefreq == 0
-        activation_fn = activation_fn_dispatcher(_config, i*dt)
-        sim_info['t']     = i*dt
-        sim_info['time_step_index'] = i
-        sim_info['x_min'] = -L+dt*vx*i
-        sim_info['y_min'] = -L+dt*vy*i
-        sim_info['x_max'] =  L+dt*vx*i
-        sim_info['y_max'] =  L+dt*vy*i
+    N_steps = int(_config['T']/_config['dt'])
+    for i in tqdm(range(N_steps), position=run_id, disable = _config['sweep_experiment']):
+        sim_info = get_sim_info(sim_info, _config, i)
+        activation_fn = activation_fn_dispatcher(_config, sim_info['t'])
         pXs, pVs, acc, ms, fXs, fVs = integrate_one_timestep(pXs = pXs,
-                                                         pVs = pVs,
-                                                         acc = acc,
-                                                         ms  = ms,
-                                                         activation_fn = activation_fn,
-                                                         sim_info = sim_info,
-                                                         _config = _config,
-                                                         get_fluid_velocity=plotting_this_iteration,
-                                                         use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
-        do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, plotting_this_iteration)
+                                                             pVs = pVs,
+                                                             acc = acc,
+                                                             ms  = ms,
+                                                             activation_fn = activation_fn,
+                                                             sim_info = sim_info,
+                                                             _config = _config,
+                                                             get_fluid_velocity=sim_info['plotting_this_iteration'],
+                                                             use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
+        do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, sim_info['plotting_this_iteration'])
     post_run_hooks(ex, _config, _run, data_dir)
