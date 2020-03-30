@@ -3,4 +3,4 @@ __pycache__
 *.swp
 venv
 experiment*.py
-submit.sh
+submit*.sh
