@@ -32,7 +32,7 @@ def cfg():
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     use_interpolated_fluid_velocities = True
     dt=.01
-    T=4
+    T=10
     n_part=5000
     MAKE_VIDEO = True
     SAVEFIG    = False
@@ -41,10 +41,9 @@ def cfg():
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
     activation_circle_radius = .5
     v_circ = np.array([.25, 0. ])
-    x_0_circ = np.array([0,0])
-    #AR = 1.
+    vx = 0.1
+    x_0_circ = np.array([vx,0])
     L=2
-
     window_velocity = v_circ
 
     ## Interaction parameters
@@ -57,17 +56,17 @@ def cfg():
     spring_k=1.
     spring_r0=0.2
     # LJ properties
-    LJ_eps=.1
+    LJ_eps=0.
     LJ_r0=.05
     LJ_cutoff=2.5/1.122*LJ_r0 # canonical choice
     # Brownian properties
-    brownian_motion_delta = 0.01
+    brownian_motion_delta = 0.
     # Particle Fusion
     particle_fusion_distance = 1e-3
 
     ## Fluid parameters
-    mu=1.
-    Rdrag = .05
+    mu=10.
+    Rdrag = .01
     drag_factor=1
 
 def get_sim_info(old_sim_info, _config, i):
