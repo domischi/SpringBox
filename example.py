@@ -20,8 +20,8 @@ from measurements import do_measurements
 ex = Experiment('SpringBox')
 ex.observers.append(MongoObserver.create())
 #ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
-SETTINGS.CAPTURE_MODE = 'sys'
-ex.captured_out_filter = apply_backspaces_and_linefeeds
+#SETTINGS.CAPTURE_MODE = 'sys'
+#ex.captured_out_filter = apply_backspaces_and_linefeeds
 
 @ex.config
 def cfg():
