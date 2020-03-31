@@ -28,7 +28,8 @@ def cfg():
     ## Simulation parameters
     sweep_experiment = False
     run_id = 0
-    savefreq = 3
+    savefreq_fig = 3
+    savefreq_data_dump = 500
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     use_interpolated_fluid_velocities = True
     dt=.01
@@ -73,16 +74,20 @@ def get_sim_info(old_sim_info, _config, i):
     sim_info = old_sim_info
     dt = _config['dt']
     L = _config['L']
+    T = _config['T']
     vx = _config['window_velocity'][0]
     vy = _config['window_velocity'][1]
-    savefreq = _config['savefreq']
+    savefreq_fig = _config['savefreq_fig']
+    savefreq_dd = _config['savefreq_data_dump']
     sim_info['t']     = i*dt
     sim_info['time_step_index'] = i
     sim_info['x_min'] = -L+dt*vx*i
     sim_info['y_min'] = -L+dt*vy*i
     sim_info['x_max'] =  L+dt*vx*i
     sim_info['y_max'] =  L+dt*vy*i
-    sim_info['plotting_this_iteration'] = (savefreq!=None and i%savefreq == 0)
+    sim_info['plotting_this_iteration'] = (savefreq_fig!=None and i%savefreq_fig == 0)
+    sim_info['data_dump_this_iteration'] = (savefreq_dd!=None and (i%savefreq_dd == 0 or i==int(T/dt)-1))
+    sim_info['get_fluid_velocity_this_iteration'] = sim_info['plotting_this_iteration'] or sim_info['data_dump_this_iteration']
     return sim_info
 
 @ex.automain
@@ -119,7 +124,19 @@ def main(_config, _run):
                                                              activation_fn = activation_fn,
                                                              sim_info = sim_info,
                                                              _config = _config,
-                                                             get_fluid_velocity=sim_info['plotting_this_iteration'],
+                                                             get_fluid_velocity=sim_info['get_fluid_velocity_this_iteration'],
                                                              use_interpolated_fluid_velocities=_config['use_interpolated_fluid_velocities'])
-        do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, sim_info['plotting_this_iteration'])
+
+        do_measurements(ex = ex,
+                        _config = _config,
+                        _run = _run,
+                        sim_info = sim_info,
+                        pXs = pXs,
+                        pVs = pVs,
+                        acc = acc,
+                        ms = ms,
+                        fXs = fXs,
+                        fVs = fVs,
+                        plotting_this_iteration = sim_info['plotting_this_iteration'],
+                        save_all_data_this_iteration = sim_info['data_dump_this_iteration'])
     post_run_hooks(ex, _config, _run, data_dir)
