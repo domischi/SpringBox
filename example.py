@@ -41,9 +41,9 @@ def cfg():
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
     activation_circle_radius = .5
-    v_circ = np.array([.25, 0. ])
     vx = 0.1
-    x_0_circ = np.array([vx,0])
+    v_circ = np.array([vx, 0. ])
+    x_0_circ = np.array([0,0])
     L=2
     window_velocity = v_circ
 
