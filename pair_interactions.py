@@ -47,12 +47,12 @@ def RHS(pXs, prv_acc, activation_fn, _config):
     acc = active_particles(pXs, prv_acc, activation_fn, _config)
     Dij = squareform(pdist(pXs))
     np.clip(Dij, 1e-6, None, out = Dij)
+    assert(_config['spring_k']>0 or _config['LJ_eps']>0)
     ## Spring
     if _config['spring_k']>0:
         rhs += spring_forces(acc,pXs,Dij,_config)
     ## Lennard-Jones
     if _config['LJ_eps']>0:
         rhs += LJ_forces(acc,pXs,Dij,_config)
-    assert(max(abs(rhs.flatten()))>0)
     return rhs, acc
 
