@@ -34,9 +34,10 @@ def cfg():
     use_interpolated_fluid_velocities = True
     dt=.01
     T=10
-    n_part=5000
+    particle_density = 310
     MAKE_VIDEO = True
     SAVEFIG    = False
+    const_particle_density = True
 
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
@@ -46,6 +47,7 @@ def cfg():
     x_0_circ = np.array([0,0])
     L=2
     window_velocity = v_circ
+    n_part = particle_density * ((2*L)**2)
 
     ## Interaction parameters
     # Particle properties
@@ -62,8 +64,6 @@ def cfg():
     LJ_cutoff=2.5/1.122*LJ_r0 # canonical choice
     # Brownian properties
     brownian_motion_delta = 0.
-    # Particle Fusion
-    particle_fusion_distance = 1e-3
 
     ## Fluid parameters
     mu=10.

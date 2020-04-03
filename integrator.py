@@ -4,6 +4,7 @@ from scipy.interpolate import RectBivariateSpline
 import matplotlib.pyplot as plt
 from pair_interactions import RHS
 from scipy.spatial.distance import pdist, squareform
+import sys
 
 def get_linear_grid(sim_info,res=32):
     return np.linspace(sim_info['x_min'],sim_info['x_max'],res), np.linspace(sim_info['y_min'],sim_info['y_max'],res)
@@ -37,29 +38,66 @@ def fVs_on_particles(pXs, pVs, sim_info, mu=1, res=32, spline_degree=3):
     fVs_y = func_fV_y.ev(pXs[:,0], pXs[:,1])
     return np.array((fVs_x,fVs_y)).T
 
-@numba.njit
-def particle_fusion(pXs, pVs, ms, acc, n_part, r, minit, Dij):
-    ind_f = [np.int(0) for _ in range(0)]
+@numba.jit
+def particle_fusion(pXs, pVs, ms, acc, n_part, n_fuse, minit):
+    """
+    This function handles the fusion of particles due to an agglomeration of mass in an aster
+    """
+    ind_f = []
+    ## Get the distance between the activated particles (not in square form, because we need the list of non-zero entries, only occuring once)
+    dist_among_acc = pdist(pXs[np.nonzero(acc)])
+
+    ## This logic block should never be false in a real-case scenario. It occurs when more particles should be fused together to ensure constant density than there are activated particles
+    SKIP_TO_NEXT_STEP = False
+    if n_fuse < sum(acc):
+        ## Determine the n_fuse minimal distances among the activated particles. These distances are between the particles we want to fuse
+        n_fuse_minimal_vals = np.partition(dist_among_acc,n_fuse)[:n_fuse]
+    else:
+        print('Warning: Did enough activated particles to fuse. Reducing number of fused particles')
+        n_fuse = int(sum(acc))
+        n_fuse_minimal_vals = dist_among_acc
+        SKIP_TO_NEXT_STEP = True
+
+    ## Now go over all particles (because we need the proper indices)
+    Dij = squareform(pdist(pXs)) ## Calculate some values twice, but should not be a large problem
+    cnt = 0 # Accounting how many fusion processes we did
     for i in range(n_part):
         if acc[i]:
             for j in range(i+1,n_part):
-                if Dij[i,j]<r and acc[j]:
+                ## Check if we found a pair that we want to fuse
+                if Dij[i,j] in n_fuse_minimal_vals and acc[j]:
+                    ## Inelastic collision math
                     pXs[i,:] = (pXs[i,:]+pXs[i,:])/2
                     pVs[i,:] = (ms[i]*pXs[i,:]+ms[j]*pXs[j,:])/(ms[i]+ms[j])
                     ms[i] = ms[i]+ms[j]
-                    ind_f.append(j)
+                    ind_f.append(j) ## particle j can be respawned
                     ms[j]=minit
-                    break # Make sure not to fuse particles i and j any more
-    return pXs, pVs, ms, acc, ind_f
+                    acc[j] = 0 ## make sure to not double do j in a new iteration
+                    cnt += 1
+                    break # Make sure not to fuse particle j any more
+    if cnt == n_fuse or SKIP_TO_NEXT_STEP: ## This should be the regular exit of this function
+        return pXs, pVs, ms, acc, ind_f
+    elif cnt < n_fuse: ## Some particles merge more than once. This catches this behavior
+        pXs, pVs, ms, acc, ind_f_tmp = particle_fusion(pXs, pVs, ms, acc, n_part, n_fuse-cnt, minit)
+        ind_f = ind_f+ind_f_tmp
+        return pXs, pVs, ms, acc, ind_f
+    else: ## No idea what happens here. Should never happen. Raise error when this is encountered
+        raise RuntimeError('Something went wrong in particle_fusion. Merged more particles than required...')
 
 def create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info):
+    """
+    This function handles the destruction and spawning of new particles in the simulation when the field of view moves. This is achieved by several sub logics. One is that particles which leave the field of view can be ignored and set to a new particle positon. Furthermore, particles that agglomerate in the center due to the aster formation can be fused together. This is done adaptively, so that the fusion is only performed on so many particles to have the density of particles fixed in the newly spawned area.
+    """
     ## TODO generalize for any velocity vector
+    ## Get the required parameters to determine the new geometry
     dt = _config['dt']
     L = _config['L']
     vx = _config['window_velocity'][0]
     vy = _config['window_velocity'][1]
     assert(vx >= 0) # at least for now
     assert(vy >= 0)
+
+    ## Determine the new geometry as well as the old one
     x_min_new = sim_info['x_min']
     x_min_old = x_min_new-dt*vx
     x_max_new = sim_info['x_max']
@@ -68,12 +106,28 @@ def create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info):
     y_min_old = y_min_new-dt*vy
     y_max_new = sim_info['y_max']
     y_max_old = y_max_new-dt*vy
+
+    ## Determine how many particles have to be spawned based on the density
+    new_area =   (x_max_new - x_min_new) * (y_max_new - y_max_old) \
+               + (x_max_new - x_max_old) * (y_max_new - y_min_new) \
+               - (x_max_new - x_max_old) * (y_max_new - y_max_old)
+    n_particles_to_spawn = _config['particle_density'] * new_area
+
+    ## Which particles left the field of view and can now be reset
     ind_x = np.nonzero( pXs[:,0]<x_min_new )[0]
     ind_y = np.nonzero( pXs[:,1]<y_min_new )[0]
+
+    ## Determine how many particles need to be fused in the activated area to keep the density constant
     ind_f = []
-    ## Fusion process
-    if _config['particle_fusion_distance']>0.:
-        pXs, pVs, ms, acc, ind_f = particle_fusion(pXs, pVs, ms, acc, n_part=_config['n_part'], r=_config['particle_fusion_distance'], minit=_config['m_init'], Dij = squareform(pdist(pXs)))
+    n_particles_to_spawn -= len(ind_x) + len(ind_y)
+    tmp = int(n_particles_to_spawn)
+    n_particles_to_spawn = tmp + int(np.random.rand()<(n_particles_to_spawn-tmp))
+
+    ## Fusion process (delegated into it's own function, because reasonably difficult logic there)
+    if _config['const_particle_density'] and n_particles_to_spawn > 0 and sim_info['time_step_index']>0:
+        pXs, pVs, ms, acc, ind_f = particle_fusion(pXs, pVs, ms, acc, n_part=_config['n_part'], n_fuse = n_particles_to_spawn, minit=_config['m_init'])
+
+    ## Set new positions in the newly spawned areas for reset particles
     pXs[ind_x,0] = np.random.rand(len(ind_x))*(x_max_new-x_max_old)+x_max_old
     pXs[ind_x,1] = np.random.rand(len(ind_x))*(y_max_new-y_min_new)+y_min_new
     pXs[ind_y,0] = np.random.rand(len(ind_y))*(x_max_new-x_min_new)+x_min_new
@@ -84,9 +138,12 @@ def create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info):
     elif vy > 0:
         pXs[ind_f,0] = np.random.rand(len(ind_f))*(x_max_new-x_min_new)+x_min_new
         pXs[ind_f,1] = np.random.rand(len(ind_f))*(y_max_new-y_max_old)+y_max_old
+
+    ## New particles have zero velocity...
     pVs[ind_x] = np.zeros(shape=(len(ind_x),2))
     pVs[ind_y] = np.zeros(shape=(len(ind_y),2))
     pVs[ind_f] = np.zeros(shape=(len(ind_f),2))
+    ## ... and no activation
     acc[ind_x] = np.zeros(shape=len(ind_x))
     acc[ind_y] = np.zeros(shape=len(ind_y))
     acc[ind_f] = np.zeros(shape=len(ind_f))
