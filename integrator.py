@@ -51,7 +51,11 @@ def particle_fusion(pXs, pVs, ms, acc, n_part, n_fuse, minit):
     SKIP_TO_NEXT_STEP = False
     if n_fuse < sum(acc):
         ## Determine the n_fuse minimal distances among the activated particles. These distances are between the particles we want to fuse
-        n_fuse_minimal_vals = np.partition(dist_among_acc,n_fuse)[:n_fuse]
+        try:
+            n_fuse_minimal_vals = np.partition(dist_among_acc,n_fuse)[:n_fuse]
+        except:
+            print(f'Something went wrong with trying to partition... n_fuse = {n_fuse}, number of activated particles: {sum(acc)}')
+            SKIP_TO_NEXT_STEP = True
     else:
         print('Warning: Did enough activated particles to fuse. Reducing number of fused particles')
         n_fuse = int(sum(acc))
