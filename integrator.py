@@ -38,7 +38,7 @@ def fVs_on_particles(pXs, pVs, sim_info, mu=1, res=32, spline_degree=3):
     fVs_y = func_fV_y.ev(pXs[:,0], pXs[:,1])
     return np.array((fVs_x,fVs_y)).T
 
-@numba.jit
+#@numba.jit ##TODO reimplement this to work with numba
 def particle_fusion(pXs, pVs, ms, acc, n_part, n_fuse, minit):
     """
     This function handles the fusion of particles due to an agglomeration of mass in an aster
