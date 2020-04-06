@@ -55,6 +55,7 @@ def particle_fusion(pXs, pVs, ms, acc, n_part, n_fuse, minit):
             n_fuse_minimal_vals = np.partition(dist_among_acc,n_fuse)[:n_fuse]
         except:
             print(f'Something went wrong with trying to partition... n_fuse = {n_fuse}, number of activated particles: {sum(acc)}')
+            n_fuse_minimal_vals = []
             SKIP_TO_NEXT_STEP = True
     else:
         print('Warning: Did enough activated particles to fuse. Reducing number of fused particles')
