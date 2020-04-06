@@ -11,5 +11,5 @@ name = MPI.Get_processor_name()
 for i, vx in enumerate([.1,.2,.5,.8,1.,1.2,1.5,2]):
     if i%size == rank:
         time.sleep(rank) # To mitigate race conditions
-        config_updates = {run_id : rank, 'vx': float(vx)}
+        config_updates = {'run_id': i, 'sweep_experiment': True , 'vx': float(vx)}
         ex.run(config_updates=config_updates)

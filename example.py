@@ -114,7 +114,10 @@ def main(_config, _run):
 
     ## Integration loop
     N_steps = int(_config['T']/_config['dt'])
-    for i in tqdm(range(N_steps), position=run_id, disable = _config['sweep_experiment']):
+    for i in tqdm(range(N_steps), disable = _config['sweep_experiment']):
+        if _config['sweep_experiment'] and (i%50)==0:
+            print(f"[{datetime.datetime.now()}] Run {_config['run_id']}: Doing step {i+1: >6} of {N_steps}")
+
         sim_info = get_sim_info(sim_info, _config, i)
         activation_fn = activation_fn_dispatcher(_config, sim_info['t'])
         pXs, pVs, acc, ms, fXs, fVs = integrate_one_timestep(pXs = pXs,
