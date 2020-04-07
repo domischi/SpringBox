@@ -4,7 +4,7 @@ from scipy.interpolate import RectBivariateSpline
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from pair_interactions import RHS
+from .pair_interactions import RHS
 from scipy.spatial.distance import pdist, squareform
 import sys
 

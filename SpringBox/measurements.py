@@ -1,4 +1,4 @@
-from illustration import plot_data
+from .illustration import plot_data
 import json
 import numpy as np
 import sys

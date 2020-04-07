@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
-from integrator import get_linear_grid
+from .integrator import get_linear_grid
 
 def get_fluid_colors(fXs, fVs, normalize=False):
     ## I realized that with limited data, this coloring does not make much sense

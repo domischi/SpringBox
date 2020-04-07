@@ -12,14 +12,14 @@ import numba
 from numba.errors import NumbaWarning
 import warnings
 warnings.simplefilter('ignore', category=NumbaWarning)
-from integrator import integrate_one_timestep
-from activation import *
-from post_run_hooks import post_run_hooks
-from measurements import do_measurements
+from SpringBox.integrator import integrate_one_timestep
+from SpringBox.activation import *
+from SpringBox.post_run_hooks import post_run_hooks
+from SpringBox.measurements import do_measurements
 
 ex = Experiment('SpringBox')
-ex.observers.append(MongoObserver.create())
-#ex.observers.append(FileStorageObserver.create(f'data/{str(datetime.date.today())}'))
+#ex.observers.append(MongoObserver.create())
+ex.observers.append(FileStorageObserver.create(f'data/'))
 #SETTINGS.CAPTURE_MODE = 'sys'
 #ex.captured_out_filter = apply_backspaces_and_linefeeds
 

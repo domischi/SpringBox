@@ -2,7 +2,7 @@ from mpi4py import MPI
 from mpi4py.futures import MPIPoolExecutor
 import sys 
 import time
-from experiment_single import ex
+from example import ex
 
 size = MPI.COMM_WORLD.Get_size()
 rank = MPI.COMM_WORLD.Get_rank()
