@@ -1,4 +1,5 @@
 from sacred import Experiment, SETTINGS
+from sacred.dependencies import PackageDependency
 from sacred.observers import FileStorageObserver, MongoObserver
 from sacred.utils import apply_backspaces_and_linefeeds
 from functools import partial
@@ -12,6 +13,7 @@ import numba
 from numba.errors import NumbaWarning
 import warnings
 warnings.simplefilter('ignore', category=NumbaWarning)
+import SpringBox
 from SpringBox.integrator import integrate_one_timestep
 from SpringBox.activation import *
 from SpringBox.post_run_hooks import post_run_hooks
@@ -20,8 +22,7 @@ from SpringBox.measurements import do_measurements
 ex = Experiment('SpringBox')
 #ex.observers.append(MongoObserver.create())
 ex.observers.append(FileStorageObserver.create(f'data/'))
-#SETTINGS.CAPTURE_MODE = 'sys'
-#ex.captured_out_filter = apply_backspaces_and_linefeeds
+ex.dependencies.add(PackageDependency("SpringBox",SpringBox.__version__))
 
 @ex.config
 def cfg():
