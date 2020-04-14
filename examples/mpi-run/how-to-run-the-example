@@ -1,0 +1,2 @@
+# Execute the following to sweep over the parameters set in the file example-mpi-sweep.py and keeping the other constants fixed as set in example.py
+mpirun -n <number of cores> python3 example-mpi-sweep.py
