@@ -1,0 +1,5 @@
+# Execute the following to prepare the queued runs with the constant parameters set in example.py and the varied parameters by example-queue.py
+python3 example-queue.py
+
+# To run the queued runs execute the following:
+python3 example-executor.py data/
