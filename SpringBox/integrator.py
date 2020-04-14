@@ -89,7 +89,7 @@ def particle_fusion(pXs, pVs, ms, acc, n_part, n_fuse, minit):
         ind_f = ind_f+ind_f_tmp
         return pXs, pVs, ms, acc, ind_f
     else: ## No idea what happens here. Should never happen. Raise error when this is encountered
-        raise RuntimeError('Something went wrong in particle_fusion. Merged more particles than required...')
+        raise RuntimeError(f'Something went wrong in particle_fusion. Merged more particles ({cnt}) than required ({n_fuse})...')
 
 def create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info):
     """
