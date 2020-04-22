@@ -36,7 +36,7 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
         _run.log_scalar("fv_avg_y", fV_avg[1], sim_info['time_step_index'])
         _run.log_scalar("fv_avg_x-vx", fV_avg[0]-_config['window_velocity'][0], sim_info['time_step_index'])
         _run.log_scalar("fv_avg_y-vy", fV_avg[1]-_config['window_velocity'][1], sim_info['time_step_index'])
-        
+
     if save_all_data_this_iteration:
         d= {
                 'pXs' : pXs.tolist() ,
@@ -65,3 +65,11 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
                   plot_fluids=True,
                   side_by_side=True,
                   fluid_plot_type = 'quiver')
+
+def do_one_timestep_correlation_measurement(ex, _config, _run, sim_info, pXs, pXs_old):
+    assert(pXs.shape==pXs_old.shape)
+    p1 = pXs.flatten()
+    p2 = pXs_old.flatten()
+    corr = np.dot(p1,p2)/(np.linalg.norm(p1)*np.linalg.norm(p2))
+    _run.log_scalar("One timestep correlator", corr, sim_info['time_step_index'])
+    return corr

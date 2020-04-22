@@ -3,6 +3,7 @@ from sacred.dependencies import PackageDependency
 from sacred.observers import FileStorageObserver, MongoObserver
 from sacred.utils import apply_backspaces_and_linefeeds
 from functools import partial
+from copy import deepcopy
 from tqdm import tqdm as std_tqdm
 tqdm = partial(std_tqdm, ncols=100)
 import numpy as np
@@ -17,7 +18,7 @@ import SpringBox
 from SpringBox.integrator import integrate_one_timestep
 from SpringBox.activation import *
 from SpringBox.post_run_hooks import post_run_hooks
-from SpringBox.measurements import do_measurements
+from SpringBox.measurements import do_measurements, do_one_timestep_correlation_measurement
 
 ex = Experiment('SpringBox')
 #ex.observers.append(MongoObserver.create())
@@ -34,11 +35,12 @@ def cfg():
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     use_interpolated_fluid_velocities = True
     dt=.01
-    T=10
+    T=.5
     particle_density = 310
     MAKE_VIDEO = True
     SAVEFIG    = False
     const_particle_density = True
+    measure_one_timestep_correlator = False
 
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'moving-circle' # For the possible choices, see the activation.py file
@@ -89,6 +91,7 @@ def get_sim_info(old_sim_info, _config, i):
     sim_info['plotting_this_iteration'] = (savefreq_fig!=None and i%savefreq_fig == 0)
     sim_info['data_dump_this_iteration'] = (savefreq_dd!=None and (i%savefreq_dd == 0 or i==int(T/dt)-1))
     sim_info['get_fluid_velocity_this_iteration'] = sim_info['plotting_this_iteration'] or sim_info['data_dump_this_iteration']
+    sim_info['measure_one_timestep_correlator'] = ( 'measure_one_timestep_correlator' in _config.keys() and _config['measure_one_timestep_correlator'])
     return sim_info
 
 @ex.automain
@@ -121,6 +124,8 @@ def main(_config, _run):
 
         sim_info = get_sim_info(sim_info, _config, i)
         activation_fn = activation_fn_dispatcher(_config, sim_info['t'])
+        if sim_info['measure_one_timestep_correlator']:
+            pXs_old = deepcopy(pXs)
         pXs, pVs, acc, ms, fXs, fVs = integrate_one_timestep(pXs = pXs,
                                                              pVs = pVs,
                                                              acc = acc,
@@ -143,4 +148,11 @@ def main(_config, _run):
                         fVs = fVs,
                         plotting_this_iteration = sim_info['plotting_this_iteration'],
                         save_all_data_this_iteration = sim_info['data_dump_this_iteration'])
+        if sim_info['measure_one_timestep_correlator']:
+            do_one_timestep_correlation_measurement(ex = ex,
+                                                    _config = _config,
+                                                    _run = _run,
+                                                    sim_info = sim_info,
+                                                    pXs = pXs,
+                                                    pXs_old = pXs_old)
     post_run_hooks(ex, _config, _run, data_dir)
