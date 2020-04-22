@@ -35,7 +35,7 @@ def cfg():
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     use_interpolated_fluid_velocities = True
     dt=.01
-    T=.5
+    T=10
     particle_density = 310
     MAKE_VIDEO = True
     SAVEFIG    = False
