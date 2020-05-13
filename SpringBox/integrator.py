@@ -25,7 +25,7 @@ def fVs_on_points(ps, pXs, pVs, mu=1):
         lp =  l[ind]
         dXp= dX[ind]
         fVs[ind] += np.outer(-np.log(lp),v) + np.multiply(dXp.T,np.dot(dXp,v)/lp**2).T
-    return fVs/(8*np.pi*mu)
+    return fVs/(4*np.pi*mu)
 
 def fVs_on_grid(pXs, pVs, sim_info, mu=1, res=32):
     fXs = get_grid_pairs(sim_info, res).T
