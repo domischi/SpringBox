@@ -180,7 +180,7 @@ def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, 
             plt.quiver(pXs[:,0],pXs[:,1], fVs [:,0], fVs [:,1], color='red')
             plt.quiver(pXs[:,0],pXs[:,1], fVs2[:,0], fVs2[:,1], color='green')
             plt.show(block=True)
-        pVs += 6*np.pi*mu*Rdrag*fVs
+        pVs += (6*np.pi*mu*Rdrag*fVs)*dt/ms[:,np.newaxis]
     if get_fluid_velocity:
         fXs, fVs = fVs_on_grid(pXs, pVs, sim_info=sim_info, mu=mu)
         return pXs, pVs, acc, ms, fXs, fVs
