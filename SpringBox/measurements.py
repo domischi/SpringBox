@@ -55,7 +55,7 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
            }
         dump_file_loc = f"{sim_info['data_dir']}/data_dump-{sim_info['time_step_index']}.json"
         with open(dump_file_loc, 'w') as f:
-            json.dump(d,f)
+            json.dump(d,f, indent=4)
             ex.add_artifact(dump_file_loc)
 
     if plotting_this_iteration:
