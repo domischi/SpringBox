@@ -52,7 +52,7 @@ def plot_points(ax, pXs, pVs):
     vabs = np.linalg.norm(pVs, axis=1)
     sc=plt.scatter(pXs[:,0],pXs[:,1], c=vabs, cmap=plt.get_cmap('viridis'), vmin=0, vmax=max(vabs))
 
-def plot_data(pXs, pVs, fXs, fVs, sim_info, image_folder, title, L, fix_frame=True, SAVEFIG=True, ex=None, plot_particles=True, plot_fluids=True, side_by_side=False, fluid_plot_type='streamplot', fluid_coloring_scheme='vabs'):
+def plot_data_w_fluid(pXs, pVs, fXs, fVs, sim_info, image_folder, title, L, fix_frame=True, SAVEFIG=True, ex=None, plot_particles=True, plot_fluids=True, side_by_side=False, fluid_plot_type='streamplot', fluid_coloring_scheme='vabs'):
     if not (plot_particles or plot_fluids):
         print('Plotting without anyting to plot. Raising exception...')
         raise RuntimeError
@@ -74,6 +74,30 @@ def plot_data(pXs, pVs, fXs, fVs, sim_info, image_folder, title, L, fix_frame=Tr
         if fix_frame:
             plt.xlim([sim_info['x_min'],sim_info['x_max']])
             plt.ylim([sim_info['y_min'],sim_info['y_max']])
+    plt.tight_layout()
+
+    IMG_NAME=f"{image_folder}/fig{sim_info['time_step_index']:08}.png"
+    plt.savefig(IMG_NAME)
+    if SAVEFIG:
+        ex.add_artifact(IMG_NAME)
+    try:
+        plt.close(fig)
+    except:
+        print('Something went wrong with closing the figure')
+
+def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex):
+    fig = plt.figure(figsize=(5,5))
+    ax = fig.gca()
+    
+    split = len(pXs)//2
+
+    plt.scatter(pXs[split:,0],pXs[split:,1])
+    plt.scatter(pXs[:split,0],pXs[:split,1])
+
+    plt.title(title)
+    if fix_frame:
+        plt.xlim([sim_info['x_min'],sim_info['x_max']])
+        plt.ylim([sim_info['y_min'],sim_info['y_max']])
     plt.tight_layout()
 
     IMG_NAME=f"{image_folder}/fig{sim_info['time_step_index']:08}.png"

@@ -165,7 +165,7 @@ def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, 
     pVs = (1-_config['drag_factor'])*pVs + dt * rhs / ms[:,np.newaxis]
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
-    if np.linalg.norm(_config['window_velocity']) > 0:
+    if 'window_velocity' in _config and np.linalg.norm(_config['window_velocity']) > 0:
         pXs, pVs, acc = create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info)
     if Rdrag > 0:
         if use_interpolated_fluid_velocities:
