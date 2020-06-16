@@ -11,7 +11,7 @@ import time
 import datetime
 import os
 import numba
-from numba.errors import NumbaWarning
+from numba.core.errors import NumbaWarning
 import warnings
 warnings.simplefilter('ignore', category=NumbaWarning)
 import SpringBox
