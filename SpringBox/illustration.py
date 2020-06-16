@@ -3,6 +3,7 @@ import os
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 from .integrator import get_linear_grid
@@ -85,12 +86,38 @@ def plot_data_w_fluid(pXs, pVs, fXs, fVs, sim_info, image_folder, title, L, fix_
     except:
         print('Something went wrong with closing the figure')
 
-def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex):
+def get_mixing_hists(pXs, nbins, sim_info, cap=None):
+    split = len(pXs)//2
+    r = [[sim_info['x_min'],sim_info['x_max']],[sim_info['y_min'],sim_info['y_max']]]
+    H1, x_edges, y_edges = np.histogram2d(pXs[split:,0],pXs[split:,1], bins=nbins,range=r)
+    H2, x_edges, y_edges = np.histogram2d(pXs[:split,0],pXs[:split,1], bins=nbins,range=r)
+    if not cap is None:
+        np.clip(H1,0,cap,out=H1)
+        np.clip(H2,0,cap,out=H2)
+    H1=H1.T
+    H2=H2.T
+    return x_edges, y_edges, H1, H2
+
+
+C0_map = LinearSegmentedColormap.from_list('C0_map', ['w','C0'], N=256)
+C1_map = LinearSegmentedColormap.from_list('C1_map', ['w','C1'], N=256)
+def plot_mixing_hist(ax, pXs, sim_info, nbins=32):
+    cmaxx = 4*len(pXs)/nbins**2
+    plt.sca(ax)
+    X,Y, H1, H2 = get_mixing_hists(pXs, nbins, sim_info, cap=cmaxx)
+    X, Y = np.meshgrid(X,Y)
+    plt.pcolormesh(X,Y,H1, cmap=C0_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=.7)
+    plt.pcolormesh(X,Y,H2, cmap=C1_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=.7)
+
+
+def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex, plot_density_map=True):
     fig = plt.figure(figsize=(5,5))
     ax = fig.gca()
+
+    if plot_density_map:
+        plot_mixing_hist(ax, pXs, sim_info)
     
     split = len(pXs)//2
-
     plt.scatter(pXs[split:,0],pXs[split:,1])
     plt.scatter(pXs[:split,0],pXs[:split,1])
 
