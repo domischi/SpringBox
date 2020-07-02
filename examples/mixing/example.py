@@ -11,7 +11,7 @@ import time
 import datetime
 import os
 import numba
-from numba.core.errors import NumbaWarning
+from numba.errors import NumbaWarning
 import warnings
 warnings.simplefilter('ignore', category=NumbaWarning)
 import SpringBox
@@ -42,6 +42,7 @@ def cfg():
     SAVEFIG    = False
     const_particle_density = False
     measure_one_timestep_correlator = False
+    periodic_boundary = True
 
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'const-rectangle' # For the possible choices, see the activation.py file
