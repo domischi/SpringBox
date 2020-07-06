@@ -181,7 +181,7 @@ def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, 
     pXs = pXs + dt * pVs
     rhs, acc = RHS(pXs, acc,activation_fn, _config=_config)
     pVs = (1-_config['drag_factor'])*pVs + dt * rhs / ms[:,np.newaxis]
-    if _config['periodic_boundary']:
+    if _config.get('periodic_boundary', False):
         pXs, pVs, acc = periodic_boundary(pXs, pVs, acc, _config, sim_info)
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
