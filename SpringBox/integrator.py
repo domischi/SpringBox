@@ -156,6 +156,24 @@ def create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info):
     acc[ind_f] = np.zeros(shape=len(ind_f))
     return pXs, pVs, acc
 
+def periodic_boundary(pXs, pVs, acc, _config, sim_info):
+    """
+    This function handles the periodic boundary functions on a non-moving image
+    """
+    x_min = sim_info['x_min']
+    x_max = sim_info['x_max']
+    y_min = sim_info['y_min']
+    y_max = sim_info['y_max']
+    x_length = x_max - x_min
+    y_length = y_max - y_min
+
+    ind_x = np.nonzero(pXs[:, 0] < x_min)[0] or np.nonzero(pXs[:, 0] > x_max)[0]
+    ind_y = np.nonzero( pXs[:, 1] < y_min)[0] or np.nonzero(pXs[:, 1] > y_max)[0]
+    pXs[ind_x, 0] = (pXs[ind_x, 0] - x_min) % x_length + x_min
+    pXs[ind_y, 1] = (pXs[ind_y, 1] - y_min) % y_length + y_min
+
+    return pXs, pVs, acc
+
 def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
@@ -163,6 +181,8 @@ def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, 
     pXs = pXs + dt * pVs
     rhs, acc = RHS(pXs, acc,activation_fn, _config=_config)
     pVs = (1-_config['drag_factor'])*pVs + dt * rhs / ms[:,np.newaxis]
+    if _config['periodic_boundary']:
+        pXs, pVs, acc = periodic_boundary(pXs, pVs, acc, _config, sim_info)
     if _config['brownian_motion_delta'] > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
     if 'window_velocity' in _config and np.linalg.norm(_config['window_velocity']) > 0:
