@@ -169,8 +169,8 @@ def periodic_boundary(pXs, pVs, acc, _config, sim_info):
 
     ind_x = np.nonzero(pXs[:, 0] < x_min)[0] or np.nonzero(pXs[:, 0] > x_max)[0]
     ind_y = np.nonzero( pXs[:, 1] < y_min)[0] or np.nonzero(pXs[:, 1] > y_max)[0]
-    pXs[ind_x, 0] = pXs[ind_x, 0] = (pXs[ind_x, 0] - x_min) % x_length + x_min
-    pXs[ind_y, 1] = pXs[ind_y, 1] = (pXs[ind_y, 1] - y_min) % y_length + y_min
+    pXs[ind_x, 0] = (pXs[ind_x, 0] - x_min) % x_length + x_min
+    pXs[ind_y, 1] = (pXs[ind_y, 1] - y_min) % y_length + y_min
 
     return pXs, pVs, acc
 
