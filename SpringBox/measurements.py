@@ -3,6 +3,7 @@ from .activation import activation_fn_dispatcher
 import json
 import numpy as np
 import sys
+from scipy.spatial import Delaunay
 
 def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, plotting_this_iteration, save_all_data_this_iteration):
     if acc is not None:
@@ -83,3 +84,20 @@ def do_one_timestep_correlation_measurement(ex, _config, _run, sim_info, pXs, pX
     corr = np.dot(p1,p2)/(np.linalg.norm(p1)*np.linalg.norm(p2))
     _run.log_scalar("One timestep correlator", corr, sim_info['time_step_index'])
     return corr
+
+def get_mixing_score(pXs, _config, sim_info):
+    # https://github.com/danielegrattarola/spektral/blob/master/spektral/datasets/delaunay.py
+    tri = Delaunay(pXs)
+    edges_explicit = np.concatenate((tri.vertices[:, :2],
+                                     tri.vertices[:, 1:],
+                                     tri.vertices[:, ::2]), axis=0)
+
+    adj = np.zeros((len(pXs), len(pXs)))
+    adj[edges_explicit[:, 0], edges_explicit[:, 1]] = 1.
+    adj_matrix = np.clip(adj + adj.T, 0, 1) 
+    v = np.ones(len(pXs))
+    v[:len(pXs)//2] = -1.
+    ret = - np.dot(v,np.dot(adj_matrix,v))  ## How much mixing in total
+    ret /= len(edges_explicit) ## how much per bond
+    ret += 1 ## only give a positive score (to encourage human players)
+    return ret
