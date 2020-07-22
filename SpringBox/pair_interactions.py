@@ -12,7 +12,7 @@ def active_particles(pXs, prv_acc, activation_fn, _config):
 
 
 @numba.jit
-def spring_forces(acc, pXs, Dij, Drxns, _config):
+def spring_forces(acc, pXs, Dij, dpXs, _config):
     rhs = np.zeros_like(pXs)
     n_part = _config['n_part']
     k = _config['spring_k']
@@ -22,13 +22,13 @@ def spring_forces(acc, pXs, Dij, Drxns, _config):
     for i in range(n_part):
         for j in range(i + 1, n_part):
             if Iij[i, j] != 0:
-                rhs[i] += -k * ((Dij[i, j] - r0) / Dij[i, j]) * (Drxns[i][j])
-                rhs[j] += +k * ((Dij[i, j] - r0) / Dij[i, j]) * (Drxns[i][j])
+                rhs[i] += -k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
+                rhs[j] += +k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
     return rhs
 
 
 @numba.jit
-def LJ_forces(acc, pXs, Dij, _config):
+def LJ_forces(acc, pXs, Dij, dpXs, _config):
     n_part = _config['n_part']
     rhs = np.zeros_like(pXs)
     eps = _config['LJ_eps']
@@ -41,8 +41,8 @@ def LJ_forces(acc, pXs, Dij, _config):
     for i in range(n_part):
         for j in range(i + 1, n_part):
             if Iij[i, j] != 0:
-                rhs[i] += -LJ_pre * (pXs[i] - pXs[j]) * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
-                rhs[j] += +LJ_pre * (pXs[i] - pXs[j]) * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
+                rhs[i] += -LJ_pre * dpXs[i][j] * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
+                rhs[j] += +LJ_pre * dpXs[i][j] * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
     return rhs
 
 
@@ -53,7 +53,7 @@ def periodic_dist(u, v, length):
     return np.sqrt(x_diff ** 2 + y_diff ** 2)
 
 
-def vectors(pXs, L):
+def periodic_distance_vectors(pXs, L):
     diffs = np.array([np.subtract.outer(p, p) for p in pXs.T]).T
     return np.remainder(diffs + L, 2 * L) - L
 
@@ -63,14 +63,18 @@ def RHS(pXs, prv_acc, activation_fn, _config):
     rhs = np.zeros_like(pXs)
     acc = active_particles(pXs, prv_acc, activation_fn, _config)
     length = _config['L']
-    Dij = squareform(pdist(pXs, metric=periodic_dist, length=length))
-    Drxns = vectors(pXs, length)
+    if _config.get('periodic_boundary', False):
+        Dij = squareform(pdist(pXs, metric=periodic_dist, length=length))
+        dpXs = periodic_distance_vectors(pXs, length)
+    else:
+        Dij = squareform(pdist(pXs))
+        dpXs = pXs[:, None] - pXs
     np.clip(Dij, 1e-6, None, out=Dij)
     assert (_config['spring_k'] > 0 or _config['LJ_eps'] > 0)
     ## Spring
     if _config['spring_k'] > 0:
-        rhs += spring_forces(acc, pXs, Dij, Drxns, _config)
+        rhs += spring_forces(acc, pXs, Dij, dpXs, _config)
     ## Lennard-Jones
     if _config['LJ_eps'] > 0:
-        rhs += LJ_forces(acc, pXs, Dij, _config)
+        rhs += LJ_forces(acc, pXs, Dij, dpXs, _config)
     return rhs, acc
