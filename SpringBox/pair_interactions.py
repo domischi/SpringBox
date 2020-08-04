@@ -55,7 +55,7 @@ def periodic_dist(u, v, length):
 
 def periodic_distance_vectors(pXs, L):
     diffs = np.array([np.subtract.outer(p, p) for p in pXs.T]).T
-    return np.remainder(diffs + L, 2 * L) - L
+    return -(np.remainder(diffs + L, 2 * L) - L)
 
 
 @numba.jit
