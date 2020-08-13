@@ -33,11 +33,12 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
         _run.log_scalar("fv_avg_x", fV_avg[0], sim_info['time_step_index'])
         _run.log_scalar("fv_avg_y", fV_avg[1], sim_info['time_step_index'])
 
-        ## Avg velocity in activated area
-        w = activation_fn_dispatcher(_config, sim_info['t'])(fXs)
-        fV_acc_avg = np.average(fVs ,weights=w, axis=0)
-        _run.log_scalar("fv_acc_avg_x", fV_acc_avg[0], sim_info['time_step_index'])
-        _run.log_scalar("fv_acc_avg_y", fV_acc_avg[1], sim_info['time_step_index'])
+        if _config['activation_fn_type'] == 'moving-cirlce':
+            ## Avg velocity in activated area
+            w = activation_fn_dispatcher(_config, sim_info['t'])(fXs)
+            fV_acc_avg = np.average(fVs ,weights=w, axis=0)
+            _run.log_scalar("fv_acc_avg_x", fV_acc_avg[0], sim_info['time_step_index'])
+            _run.log_scalar("fv_acc_avg_y", fV_acc_avg[1], sim_info['time_step_index'])
     if save_all_data_this_iteration:
         d= {
                 'pXs' : pXs.tolist() ,
