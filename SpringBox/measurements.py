@@ -86,19 +86,36 @@ def do_one_timestep_correlation_measurement(ex, _config, _run, sim_info, pXs, pX
     _run.log_scalar("One timestep correlator", corr, sim_info['time_step_index'])
     return corr
 
-def get_mixing_score(pXs, _config, sim_info):
+def get_adjacency_matrix(pXs, _config):
+    if _config.get("periodic_boundary", False):
+        L = _config["L"]
+        n_part = _config['n_part']
+        x = np.array([pXs+np.array([i*2*L, j*2*L]) for i in [0,-1,1] for j in [0,-1,1]]).reshape(9*n_part, 2)
+    else:
+        x = pXs
+
     # https://github.com/danielegrattarola/spektral/blob/master/spektral/datasets/delaunay.py
-    tri = Delaunay(pXs)
+    tri = Delaunay(x)
     edges_explicit = np.concatenate((tri.vertices[:, :2],
                                      tri.vertices[:, 1:],
                                      tri.vertices[:, ::2]), axis=0)
 
     adj = np.zeros((len(pXs), len(pXs)))
-    adj[edges_explicit[:, 0], edges_explicit[:, 1]] = 1.
-    adj_matrix = np.clip(adj + adj.T, 0, 1) 
+    if _config.get("periodic_boundary", False):
+        adj[edges_explicit[:, 0]%n_part, edges_explicit[:, 1]%n_part] = 1.
+    else:
+        adj[edges_explicit[:, 0], edges_explicit[:, 1]] = 1.
+    adj = np.clip(adj + adj.T, 0, 1) 
+    assert(np.isclose(max(adj.flatten()), 1))
+    assert(np.isclose(min(adj.flatten()), 0))
+    assert(np.allclose(adj, adj.T))
+    return adj
+
+def get_mixing_score(pXs, _config, sim_info):
+    adj_matrix = get_adjacency_matrix(pXs, _config)
     v = np.ones(len(pXs))
     v[:len(pXs)//2] = -1.
-    ret = - np.dot(v,np.dot(adj_matrix,v))  ## How much mixing in total
-    ret /= len(edges_explicit) ## how much per bond
+    ret = - np.dot(v,np.dot(adj_matrix,v))/2  ## How much mixing in total, the two because of double counting
+    ret /= sum(sum(adj_matrix))/2 ## Using Euler's formula
     ret += 1 ## only give a positive score (to encourage human players)
     return ret

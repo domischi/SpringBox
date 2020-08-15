@@ -18,7 +18,7 @@ import SpringBox
 from SpringBox.integrator import integrate_one_timestep
 from SpringBox.activation import *
 from SpringBox.post_run_hooks import post_run_hooks
-from SpringBox.measurements import do_measurements, do_one_timestep_correlation_measurement
+from SpringBox.measurements import do_measurements, do_one_timestep_correlation_measurement, get_mixing_score
 
 ex = Experiment('SpringBox')
 #ex.observers.append(MongoObserver.create())
@@ -118,7 +118,7 @@ def main(_config, _run):
 
     ## Integration loop
     N_steps = int(_config['T']/_config['dt'])
-    for i in tqdm(range(N_steps), disable = _config['sweep_experiment']):
+    for i in tqdm(range(N_steps), disable = True):
         if _config['sweep_experiment'] and (i%50)==0:
             print(f"[{datetime.datetime.now()}] Run {_config['run_id']}: Doing step {i+1: >6} of {N_steps}")
 
@@ -155,4 +155,5 @@ def main(_config, _run):
                                                     sim_info = sim_info,
                                                     pXs = pXs,
                                                     pXs_old = pXs_old)
+        print(get_mixing_score(pXs, _config, sim_info))
     post_run_hooks(ex, _config, _run, data_dir)
