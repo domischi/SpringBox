@@ -155,5 +155,5 @@ def main(_config, _run):
                                                     sim_info = sim_info,
                                                     pXs = pXs,
                                                     pXs_old = pXs_old)
-        print(get_mixing_score(pXs, _config, sim_info))
+        print(get_mixing_score(pXs, _config))
     post_run_hooks(ex, _config, _run, data_dir)

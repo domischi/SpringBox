@@ -99,19 +99,28 @@ def get_adjacency_matrix(pXs, _config):
     edges_explicit = np.concatenate((tri.vertices[:, :2],
                                      tri.vertices[:, 1:],
                                      tri.vertices[:, ::2]), axis=0)
+    if _config.get("periodic_boundary", False):
+        edges_explicit = [sorted(x) for x in edges_explicit]
+        edges_explicit = np.array([x for x in set(tuple(x) for x in edges_explicit)])
 
     adj = np.zeros((len(pXs), len(pXs)))
     if _config.get("periodic_boundary", False):
-        adj[edges_explicit[:, 0]%n_part, edges_explicit[:, 1]%n_part] = 1.
+        for c1, c2 in edges_explicit:
+            if ((c1<n_part or c2<n_part) and (x[c1,0]>=x[c2,0]))\
+                    or (c1<n_part and c2<n_part):
+                adj[c1%n_part, c2%n_part]+=1.
+                adj[c2%n_part, c1%n_part]+=1.
+        for i in range(n_part):
+            adj[i, i] = np.clip(adj[i,i], a_min=0, a_max=2)
     else:
         adj[edges_explicit[:, 0], edges_explicit[:, 1]] = 1.
-    adj = np.clip(adj + adj.T, 0, 1) 
-    assert(np.isclose(max(adj.flatten()), 1))
-    assert(np.isclose(min(adj.flatten()), 0))
-    assert(np.allclose(adj, adj.T))
+        adj = np.clip(adj + adj.T, 0, 1)
+        assert(np.isclose(max(adj.flatten()), 1))
+        assert(np.isclose(min(adj.flatten()), 0))
+        assert(np.allclose(adj, adj.T))
     return adj
 
-def get_mixing_score(pXs, _config, sim_info):
+def get_mixing_score(pXs, _config):
     adj_matrix = get_adjacency_matrix(pXs, _config)
     v = np.ones(len(pXs))
     v[:len(pXs)//2] = -1.
