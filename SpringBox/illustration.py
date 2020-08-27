@@ -101,8 +101,8 @@ def get_mixing_hists(pXs, nbins, sim_info, cap=None):
 
 C0_map = LinearSegmentedColormap.from_list('C0_map', ['w','C0'], N=256)
 C1_map = LinearSegmentedColormap.from_list('C1_map', ['w','C1'], N=256)
-def plot_mixing_hist(ax, pXs, sim_info, nbins=32):
-    cmaxx = 4*len(pXs)/nbins**2
+def plot_mixing_hist(ax, pXs, sim_info, nbins=32, CAP=4):
+    cmaxx = CAP*len(pXs)/nbins**2
     plt.sca(ax)
     X,Y, H1, H2 = get_mixing_hists(pXs, nbins, sim_info, cap=cmaxx)
     X, Y = np.meshgrid(X,Y)
