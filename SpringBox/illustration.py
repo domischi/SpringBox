@@ -99,23 +99,42 @@ def get_mixing_hists(pXs, nbins, sim_info, cap=None):
     return x_edges, y_edges, H1, H2
 
 
-C0_map = LinearSegmentedColormap.from_list('C0_map', ['w','C0'], N=256)
-C1_map = LinearSegmentedColormap.from_list('C1_map', ['w','C1'], N=256)
-def plot_mixing_hist(ax, pXs, sim_info, nbins=32, CAP=4):
+C0_map = LinearSegmentedColormap.from_list('C0_map', ['#ffffffff','C0'], N=256)
+C1_map = LinearSegmentedColormap.from_list('C1_map', ['#ffffff00','C1'], N=256)
+light_map = LinearSegmentedColormap.from_list('light_map', ['#ffffff00','#ffff00ff'], N=256)
+def plot_mixing_hist(ax, pXs, sim_info, nbins=32, CAP=4, alpha=.7):
     cmaxx = CAP*len(pXs)/nbins**2
     plt.sca(ax)
     X,Y, H1, H2 = get_mixing_hists(pXs, nbins, sim_info, cap=cmaxx)
     X, Y = np.meshgrid(X,Y)
-    plt.pcolormesh(X,Y,H1, cmap=C0_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=.7)
-    plt.pcolormesh(X,Y,H2, cmap=C1_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=.7)
+    plt.pcolormesh(X,Y,H1, cmap=C0_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=alpha  )
+    plt.pcolormesh(X,Y,H2, cmap=C1_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=alpha/2)
 
+def plot_light_pattern(ax, light_pattern, sim_info, alpha=.7):
+    plt.sca(ax)
+    nbins=light_pattern.shape[0]
+    X = np.linspace(sim_info["x_min"], sim_info["x_max"], nbins+1)
+    Y = np.linspace(sim_info["y_min"], sim_info["y_max"], nbins+1)
+    X, Y = np.meshgrid(X,Y)
+    plt.pcolormesh(X,Y,light_pattern, cmap=light_map, vmin=0, vmax=1+1e-6, alpha=alpha)
 
-def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex, plot_density_map=True, nbins = 32, cap = 4):
+def plot_mixing(pXs, sim_info, image_folder, title,fix_frame,SAVEFIG,ex, plot_density_map=True, nbins = 32, cap = 4):
     fig = plt.figure(figsize=(5,5))
     ax = fig.gca()
 
+    plot_mixing_on_axis(ax, pXs, sim_info, title,L,fix_frame,SAVEFIG,ex, plot_density_map, nbins, cap)
+    IMG_NAME=f"{image_folder}/fig{sim_info['time_step_index']:08}.png"
+    plt.savefig(IMG_NAME)
+    if SAVEFIG:
+        ex.add_artifact(IMG_NAME)
+    try:
+        plt.close(fig)
+    except:
+        print('Something went wrong with closing the figure')
+
+def plot_mixing_on_axis(ax,pXs, sim_info,  title,fix_frame,SAVEFIG,ex, plot_density_map=True, nbins = 32, cap = 4, alpha=.7):
     if plot_density_map:
-        plot_mixing_hist(ax, pXs, sim_info, nbins=nbins, CAP=cap)
+        plot_mixing_hist(ax, pXs, sim_info, nbins=nbins, CAP=cap, alpha=alpha)
     
     split = len(pXs)//2
     plt.scatter(pXs[split:,0],pXs[split:,1])
@@ -126,15 +145,6 @@ def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex, plot_
         plt.xlim([sim_info['x_min'],sim_info['x_max']])
         plt.ylim([sim_info['y_min'],sim_info['y_max']])
     plt.tight_layout()
-
-    IMG_NAME=f"{image_folder}/fig{sim_info['time_step_index']:08}.png"
-    plt.savefig(IMG_NAME)
-    if SAVEFIG:
-        ex.add_artifact(IMG_NAME)
-    try:
-        plt.close(fig)
-    except:
-        print('Something went wrong with closing the figure')
 
 def generate_video_from_png(image_folder, video_length=10, do_h264 = False):
 # Adapted from answer by BoboDarph (Stackoverflow: https://stackoverflow.com/questions/44947505/how-to-make-a-movie-out-of-images-in-python)
