@@ -110,12 +110,12 @@ def plot_mixing_hist(ax, pXs, sim_info, nbins=32, CAP=4):
     plt.pcolormesh(X,Y,H2, cmap=C1_map, vmin=0, vmax=cmaxx*(1+1e-6), alpha=.7)
 
 
-def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex, plot_density_map=True):
+def plot_mixing(pXs, sim_info, image_folder, title,L,fix_frame,SAVEFIG,ex, plot_density_map=True, nbins = 32, cap = 4):
     fig = plt.figure(figsize=(5,5))
     ax = fig.gca()
 
     if plot_density_map:
-        plot_mixing_hist(ax, pXs, sim_info)
+        plot_mixing_hist(ax, pXs, sim_info, nbins=nbins, CAP=cap)
     
     split = len(pXs)//2
     plt.scatter(pXs[split:,0],pXs[split:,1])
