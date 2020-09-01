@@ -127,4 +127,4 @@ def get_mixing_score(pXs, _config):
     ret = - np.dot(v,np.dot(adj_matrix,v))/2  ## How much mixing in total, the two because of double counting
     ret /= sum(sum(adj_matrix))/2 ## Using Euler's formula
     ret += 1 ## only give a positive score (to encourage human players)
-    return ret
+    return ret # is between 0 and 2. 0 for no mixing, 2 if all neighbors are different color, and 1 if every neighbor has equal probability of being same or different color
