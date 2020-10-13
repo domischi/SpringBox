@@ -146,7 +146,7 @@ def plot_mixing_on_axis(ax,pXs, sim_info,  title,fix_frame,SAVEFIG,ex, plot_dens
         plt.ylim([sim_info['y_min'],sim_info['y_max']])
     plt.tight_layout()
 
-def generate_video_from_png(image_folder, video_length=10, do_h264 = False):
+def generate_video_from_png(image_folder, video_length=10, do_h264 = False, destroyAllWindows=True):
 # Adapted from answer by BoboDarph (Stackoverflow: https://stackoverflow.com/questions/44947505/how-to-make-a-movie-out-of-images-in-python)
     images = sorted([img for img in os.listdir(image_folder) if img.endswith(".png")])
     if len(images)>0:
@@ -163,6 +163,7 @@ def generate_video_from_png(image_folder, video_length=10, do_h264 = False):
         for image in images:
             video.write(cv2.imread(os.path.join(image_folder, image)))
 
-        cv2.destroyAllWindows()
+        if destroyAllWindows:
+            cv2.destroyAllWindows()
         video.release()
         return video_path
