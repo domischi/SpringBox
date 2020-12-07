@@ -102,7 +102,6 @@ def get_mixing_hists(pXs, nbins, sim_info, cap=None):
 
 C0_map = LinearSegmentedColormap.from_list('C0_map', ['#ffffffff','C0'], N=256)
 C1_map = LinearSegmentedColormap.from_list('C1_map', ['#ffffff00','C1'], N=256)
-light_map = LinearSegmentedColormap.from_list('light_map', ['#ffffff00','#ffff00ff'], N=256)
 def plot_mixing_hist(ax, pXs, sim_info, nbins=32, CAP=4, alpha=.7):
     cmaxx = CAP*len(pXs)/nbins**2
     plt.sca(ax)
@@ -117,7 +116,7 @@ def plot_light_pattern(ax, light_pattern, sim_info, alpha=.7):
     X = np.linspace(sim_info["x_min"], sim_info["x_max"], nbins+1)
     Y = np.linspace(sim_info["y_min"], sim_info["y_max"], nbins+1)
     X, Y = np.meshgrid(X,Y)
-    plt.pcolormesh(X,Y,light_pattern, cmap=light_map, vmin=0, vmax=1+1e-6, alpha=alpha)
+    plt.pcolormesh(X,Y,light_pattern, cmap='PiYG', vmin=-1-1e-6, vmax=1+1e-6, alpha=alpha)
 
 def plot_mixing(pXs, sim_info, image_folder, title,fix_frame,SAVEFIG,ex, plot_density_map=True, nbins = 32, cap = 4):
     fig = plt.figure(figsize=(5,5))
