@@ -123,7 +123,7 @@ def plot_mixing(pXs, sim_info, image_folder, title,fix_frame,SAVEFIG,ex, plot_de
     fig = plt.figure(figsize=(5,5))
     ax = fig.gca()
 
-    plot_mixing_on_axis(ax, pXs, sim_info, title,L,fix_frame,SAVEFIG,ex, plot_density_map, nbins, cap)
+    plot_mixing_on_axis(ax, pXs, sim_info, title,fix_frame,SAVEFIG,ex, plot_density_map, nbins, cap)
     IMG_NAME=f"{image_folder}/fig{sim_info['time_step_index']:08}.png"
     plt.savefig(IMG_NAME)
     if SAVEFIG:
