@@ -33,7 +33,7 @@ def cfg():
     savefreq_fig = 3
     savefreq_data_dump = 500
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
-    use_interpolated_fluid_velocities = True
+    use_interpolated_fluid_velocities = False
     dt=.01
     T=10
     particle_density = 310
@@ -70,7 +70,7 @@ def cfg():
 
     ## Fluid parameters
     mu=10.
-    Rdrag = .01
+    Rdrag = 0
     drag_factor=1
 
 def get_sim_info(old_sim_info, _config, i):

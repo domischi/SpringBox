@@ -34,10 +34,10 @@ def cfg():
     savefreq_fig = 3
     savefreq_data_dump = 3
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
-    use_interpolated_fluid_velocities = True
-    dt=.01
-    T=1
-    particle_density = 31.25
+    use_interpolated_fluid_velocities = False
+    dt=.02
+    T=1.
+    particle_density = 15.625
     MAKE_VIDEO = True
     SAVEFIG    = False
     const_particle_density = False
@@ -57,10 +57,11 @@ def cfg():
     m_init=1.
     activation_decay_rate = 10. # Ex. at dt=0.01 this leads to an average deactivation of 10% of the particles
     # Spring properties
-    spring_cutoff = 50./np.sqrt(n_part) # Always have a same average of particles that interact
-    spring_lower_cutoff = spring_cutoff/25
+    spring_cutoff = 2.
+    spring_lower_cutoff = 10e-6
     spring_k=1.
-    spring_r0=0.2
+    spring_k_rep=1.
+    spring_r0=0.
     # LJ properties
     LJ_eps=0.
     LJ_r0=.05
@@ -70,7 +71,7 @@ def cfg():
 
     ## Fluid parameters
     mu=10.
-    Rdrag = .01
+    Rdrag = 0.
     drag_factor=1
 
 def get_sim_info(old_sim_info, _config, i):
@@ -130,7 +131,7 @@ def main(_config, _run):
                                                              pVs = pVs,
                                                              acc = acc,
                                                              ms  = ms,
-                                                             activation_fn = activation_fn,
+                                                             activation_fn = lambda ps: activation_fn(ps),
                                                              sim_info = sim_info,
                                                              _config = _config,
                                                              get_fluid_velocity=sim_info['get_fluid_velocity_this_iteration'],
@@ -155,5 +156,4 @@ def main(_config, _run):
                                                     sim_info = sim_info,
                                                     pXs = pXs,
                                                     pXs_old = pXs_old)
-        print(get_mixing_score(pXs, _config))
     post_run_hooks(ex, _config, _run, data_dir)

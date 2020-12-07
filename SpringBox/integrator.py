@@ -175,7 +175,16 @@ def periodic_boundary(pXs, pVs, acc, _config, sim_info):
 
     return pXs, pVs, acc
 
-def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, get_fluid_velocity=False, use_interpolated_fluid_velocities=True, DEBUG_INTERPOLATION=False):
+def integrate_one_timestep(pXs,
+                           pVs,
+                           acc,
+                           ms,
+                           sim_info,
+                           _config,
+                           activation_fn,
+                           get_fluid_velocity=False,
+                           use_interpolated_fluid_velocities=True,
+                           DEBUG_INTERPOLATION=False):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
     mu = _config['mu']
@@ -189,6 +198,7 @@ def integrate_one_timestep(pXs, pVs, acc, ms, activation_fn, sim_info, _config, 
     if 'window_velocity' in _config and np.linalg.norm(_config['window_velocity']) > 0:
         pXs, pVs, acc = create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info)
     if Rdrag > 0:
+        raise RuntimeError('Fluids implementation is broken, please do not use this module.')
         if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, sim_info=sim_info, res=32, spline_degree=3, mu=mu)
         else:
