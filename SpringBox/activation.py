@@ -1,10 +1,13 @@
 import numpy as np
 
+def inactive_activation_fn(ps):
+    return np.zeros(len(ps)).astype(np.byte)
+
 def rectangle_activation(ps, AR):
-    return (ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)
+    return ((ps[:,0]>-1) * (ps[:,0]<1) * (ps[:,1]>-AR) * (ps[:,1]<AR)).astype(np.byte)
 
 def moving_circle_activation(ps, x_center, R):
-    return (np.linalg.norm(ps-x_center,axis=1)<R)
+    return (np.linalg.norm(ps-x_center,axis=1)<R).astype(np.byte)
 
 def dumbbell_activation(ps, R, l, w):
     # R is the radius of each dumbbell circle
@@ -13,8 +16,8 @@ def dumbbell_activation(ps, R, l, w):
     part_of_bar = (ps[:,0]>-l) * (ps[:,0]<l) * (ps[:,1]>-w/2) * (ps[:,1]<w/2)
     part_of_l_circle = np.linalg.norm(ps-np.array([l,0]), axis=1)<R
     part_of_r_circle = np.linalg.norm(ps+np.array([l,0]), axis=1)<R
-    return np.logical_or(part_of_bar, np.logical_or(part_of_l_circle, part_of_r_circle))
-    
+    return (np.logical_or(part_of_bar, np.logical_or(part_of_l_circle, part_of_r_circle))).astype(np.byte)
+
 
 def activation_pattern(ps, X, Y, A):
     ind_x = np.vectorize(lambda a: np.argmax(a<X)-1)(ps[:,0])

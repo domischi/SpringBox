@@ -5,25 +5,36 @@ from scipy.spatial.distance import pdist, squareform
 
 def active_particles(pXs, prv_acc, activation_fn, _config):
     # Particles that were previously active, now can loose their activation with a rate of activation_decay_rate
-    prv_acc = prv_acc * (np.random.rand(len(prv_acc)) > _config['activation_decay_rate'] * _config['dt'])
+    retains_old_value = (np.random.rand(len(prv_acc)) > _config['activation_decay_rate'] * _config['dt']).astype(np.byte)
+    prv_acc = prv_acc.astype(np.byte) * retains_old_value
     # Or particles can become active when they enter the light activated area
+    # They become active with sign +- 1 according to p1 and m1 respectively
     new_acc = activation_fn(pXs)
-    return np.maximum(prv_acc, new_acc)
+    # But only if the status of the particle currently is inactive -> sign can be changed
+    new_acc *= (1-abs(prv_acc))
+    acc = prv_acc+new_acc
+    assert(min(acc)>=-1)
+    assert(max(acc)<= 1)
+    return acc
 
 
 @numba.jit
-def spring_forces(acc, pXs, Dij, dpXs, _config):
+def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False):
+    s=-1 if repulsive else 1
     rhs = np.zeros_like(pXs)
     n_part = _config['n_part']
-    k = _config['spring_k']
-    r0 = _config['spring_r0']
-    Iij = Dij * np.outer(acc, acc)
-    Iij = (Iij > _config['spring_lower_cutoff']) * (Iij < _config['spring_cutoff'])
+    k = _config['spring_k'] if not repulsive else _config['spring_k_rep']
+    r0 = _config.get('spring_r0', 0) if not repulsive else _config['spring_cutoff']
+    slc = _config.get('spring_lower_cutoff', 0) if not repulsive else 0.
+    suc = _config['spring_cutoff']
+    a = s*acc > 0
+    Iij = Dij * np.outer(a, a)
+    Iij = (Iij > slc) * (Iij < suc)
     for i in range(n_part):
         for j in range(i + 1, n_part):
             if Iij[i, j] != 0:
-                rhs[i] += -k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
-                rhs[j] += +k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
+                rhs[i] += - k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
+                rhs[j] += + k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
     return rhs
 
 
@@ -69,12 +80,14 @@ def RHS(pXs, prv_acc, activation_fn, _config):
     else:
         Dij = squareform(pdist(pXs))
         dpXs = pXs[:, None] - pXs
-    np.clip(Dij, 1e-6, None, out=Dij)
-    assert (_config['spring_k'] > 0 or _config['LJ_eps'] > 0)
+    #np.clip(Dij, 1e-6, None, out=Dij)
+    assert (_config.get('spring_k', 0) > 0 or _config.get('spring_k_rep', 0) > 0 or _config.get('LJ_eps', 0) > 0)
     ## Spring
-    if _config['spring_k'] > 0:
+    if _config.get('spring_k', 0) > 0:
         rhs += spring_forces(acc, pXs, Dij, dpXs, _config)
+    if _config.get('spring_k_rep', 0) > 0:
+        rhs += spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=True)
     ## Lennard-Jones
-    if _config['LJ_eps'] > 0:
+    if _config.get('LJ_eps', 0) > 0:
         rhs += LJ_forces(acc, pXs, Dij, dpXs, _config)
     return rhs, acc
