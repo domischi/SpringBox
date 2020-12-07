@@ -60,7 +60,6 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
                   sim_info,
                   image_folder=sim_info['data_dir'],
                   title=f"t={sim_info['t']:.3f}",
-                  L=_config['L'],
                   fix_frame=True,
                   SAVEFIG=_config['SAVEFIG'],
                   ex=ex)
