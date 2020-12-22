@@ -1,5 +1,8 @@
 import imageio
-import cv2
+try:
+    import cv2
+except:
+    pass
 import os
 import matplotlib
 matplotlib.use('Agg')
