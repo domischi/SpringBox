@@ -13,26 +13,7 @@ def active_particles(pXs, prv_acc, activation_fn, _config):
     # But only if the status of the particle currently is inactive -> sign can be changed
     new_acc *= (1-abs(prv_acc))
     acc = prv_acc+new_acc
-    if min(acc)<-1 or max(acc)> 1: 
-        print('Error in active_particles: min(acc) or max(acc) has an unexpected value. Some debug information follows')
-        print(f'Min acc: {min(acc)}')
-        print(f'Max acc: {max(acc)}')
-        print(f'Any nans acc: {np.isnan(acc).any()}')
-        print(f'type acc: {acc.dtype}')
-        print(f'Min prv_acc: {min(prv_acc)}')
-        print(f'Max prv_acc: {max(prv_acc)}')
-        print(f'Any nans prv_acc: {np.isnan(prv_acc).any()}')
-        print(f'type prv_acc: {prv_acc.dtype}')
-        print(f'Min new_acc: {min(new_acc)}')
-        print(f'Max new_acc: {max(new_acc)}')
-        print(f'Any nans new_acc: {np.isnan(new_acc).any()}')
-        print(f'type new_acc: {new_acc.dtype}')
-        print(f'Min retains_old_value: {min(retains_old_value)}')
-        print(f'Max retains_old_value: {max(retains_old_value)}')
-        print(f'Any nans retains_old_value: {np.isnan(retains_old_value).any()}')
-        print(f'type retains_old_value: {retains_old_value.dtype}')
-    assert(min(acc)>=-1)
-    assert(max(acc)<= 1)
+    assert(min(acc)>=-1 and max(acc)<= 1) 
     return acc
 
 

@@ -23,17 +23,7 @@ def activation_pattern(ps, X, Y, A):
     ind_x = np.vectorize(lambda a: np.argmax(a<X)-1)(ps[:,0])
     ind_y = np.vectorize(lambda a: np.argmax(a<Y)-1)(ps[:,1])
     ret_val = A[ind_x,ind_y]
-    if min(ret_val)<-1 or max(ret_val)>1:
-        print('-'*80)
-        print(f'activation_pattern min(A): {np.min(A)}')
-        print(f'activation_pattern max(A): {np.max(A)}')
-        print(f'activation_pattern min(R): {np.min(ret_val)}')
-        print(f'activation_pattern max(R): {np.max(ret_val)}')
-        print(f'activation_pattern min(ind_x): {np.min(ind_x)}')
-        print(f'activation_pattern max(ind_x): {np.max(ind_x)}')
-        print(f'activation_pattern min(ind_y): {np.min(ind_y)}')
-        print(f'activation_pattern max(ind_y): {np.max(ind_y)}')
-        print('-'*80)
+    assert(min(ret_val)>=-1 and max(ret_val)<=1)
     return ret_val
 
 
