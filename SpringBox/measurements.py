@@ -14,6 +14,11 @@ def store_dict_to_h5(d, h5file, group_name='/'):
             h5file.create_group(f"{group_name}/{k}")
             store_dict_to_h5(v, h5file, f"{group_name}/{k}")
 
+def store_dict_to_h5_by_filename(d, fname, group_name):
+    with h5py.File(fname, 'a') as f:
+        f.create_group(group_name)
+        store_dict_to_h5(d, f, group_name=group_name)
+
 
 def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, update_matrix=None, plotting_this_iteration=False, save_all_data_this_iteration=False, hdf_file = None):
     if acc is not None:
@@ -64,11 +69,7 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, up
                 json.dump(d,f, indent=4)
         else:
             dump_file_loc = f"{sim_info['data_dir']}/{hdf_file}.h5"
-            with h5py.File(dump_file_loc, 'a') as f:
-                group_name = f"iteration_{sim_info['time_step_index']}"
-                f.create_group(group_name)
-                store_dict_to_h5(d, f, group_name=group_name)
-
+            store_dict_to_h5_by_filename(d, dump_file_loc, f"iteration_{sim_info['time_step_index']}")
         ex.add_artifact(dump_file_loc)
 
     if plotting_this_iteration:
