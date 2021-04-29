@@ -18,7 +18,7 @@ def active_particles(pXs, prv_acc, activation_fn, _config):
 
 
 @numba.jit
-def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False):
+def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
     s=-1 if repulsive else 1
     rhs = np.zeros_like(pXs)
     n_part = _config['n_part']
@@ -34,11 +34,16 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False):
             if Iij[i, j] != 0:
                 rhs[i] += - k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
                 rhs[j] += + k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
+                if not M is None:
+                    M[i,j]+=k * ((Dij[i, j] - r0) / Dij[i, j])
+                    M[j,i]+=k * ((Dij[i, j] - r0) / Dij[i, j])
+                    M[i,i]-=k * ((Dij[i, j] - r0) / Dij[i, j])
+                    M[j,j]-=k * ((Dij[i, j] - r0) / Dij[i, j]) ## Because in the loop before we work with dpXs = x_i-x_j
     return rhs
 
 
 @numba.jit
-def LJ_forces(acc, pXs, Dij, dpXs, _config):
+def LJ_forces(acc, pXs, Dij, dpXs, _config, M=None):
     n_part = _config['n_part']
     rhs = np.zeros_like(pXs)
     eps = _config['LJ_eps']
@@ -53,6 +58,11 @@ def LJ_forces(acc, pXs, Dij, dpXs, _config):
             if Iij[i, j] != 0:
                 rhs[i] += -LJ_pre * dpXs[i][j] * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
                 rhs[j] += +LJ_pre * dpXs[i][j] * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
+                if not M is None:
+                    M[i,j]+=LJ_pre * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
+                    M[j,i]+=LJ_pre * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
+                    M[i,i]-=LJ_pre * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
+                    M[j,j]-=LJ_pre * ((Dij6[i, j] - r0_6) / (Dij[i, j] * Dij6[i, j]))
     return rhs
 
 
@@ -69,8 +79,9 @@ def periodic_distance_vectors(pXs, L):
 
 
 @numba.jit
-def RHS(pXs, prv_acc, activation_fn, _config):
+def RHS(pXs, prv_acc, activation_fn, _config, compute_update_matrix=False):
     rhs = np.zeros_like(pXs)
+    M = np.zeros((len(pXs), len(pXs))) if compute_update_matrix else None
     acc = active_particles(pXs, prv_acc, activation_fn, _config)
     length = _config['L']
     if _config.get('periodic_boundary', False):
@@ -83,10 +94,10 @@ def RHS(pXs, prv_acc, activation_fn, _config):
     assert (_config.get('spring_k', 0) > 0 or _config.get('spring_k_rep', 0) > 0 or _config.get('LJ_eps', 0) > 0)
     ## Spring
     if _config.get('spring_k', 0) > 0:
-        rhs += spring_forces(acc, pXs, Dij, dpXs, _config)
+        rhs += spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=M)
     if _config.get('spring_k_rep', 0) > 0:
-        rhs += spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=True)
+        rhs += spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=True,  M=M)
     ## Lennard-Jones
     if _config.get('LJ_eps', 0) > 0:
-        rhs += LJ_forces(acc, pXs, Dij, dpXs, _config)
-    return rhs, acc
+        rhs += LJ_forces(acc, pXs, Dij, dpXs, _config, M=M)
+    return rhs, acc, M

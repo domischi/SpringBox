@@ -184,13 +184,24 @@ def integrate_one_timestep(pXs,
                            activation_fn,
                            get_fluid_velocity=False,
                            use_interpolated_fluid_velocities=True,
-                           DEBUG_INTERPOLATION=False):
+                           DEBUG_INTERPOLATION=False,
+                           inverted_update=False,
+                           ):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
     mu = _config['mu']
-    pXs = pXs + dt * pVs
-    rhs, acc = RHS(pXs, acc,activation_fn, _config=_config)
+    if not inverted_update:
+        pXs = pXs + dt * pVs
+    rhs, acc, M = RHS(pXs, acc,activation_fn, _config=_config, compute_update_matrix=sim_info.get('compute_update_matrix', False))
+
+    if sim_info.get('compute_update_matrix', False):
+        M*=dt**2
+        M = M/ms[:,np.newaxis]
+        M+=np.identity(len(pXs))
     pVs = (1-_config['drag_factor'])*pVs + dt * rhs / ms[:,np.newaxis]
+    if inverted_update:
+        pXs = pXs + dt * pVs
+
     if _config.get('periodic_boundary', False):
         pXs, pVs, acc = periodic_boundary(pXs, pVs, acc, _config, sim_info)
     if _config['brownian_motion_delta'] > 0:
@@ -214,6 +225,6 @@ def integrate_one_timestep(pXs,
         pVs += (6*np.pi*mu*Rdrag*fVs)*dt/ms[:,np.newaxis]
     if get_fluid_velocity:
         fXs, fVs = fVs_on_grid(pXs, pVs, sim_info=sim_info, mu=mu)
-        return pXs, pVs, acc, ms, fXs, fVs
+        return pXs, pVs, acc, ms, fXs, fVs, M
     else:
-        return pXs, pVs, acc, ms, None, None
+        return pXs, pVs, acc, ms, None, None, M

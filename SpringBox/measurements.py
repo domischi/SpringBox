@@ -4,8 +4,18 @@ import json
 import numpy as np
 import sys
 from scipy.spatial import Delaunay
+import h5py
 
-def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, plotting_this_iteration, save_all_data_this_iteration):
+def store_dict_to_h5(d, h5file, group_name='/'):
+    for k,v in d.items():
+        if type(v)!=dict: 
+            h5file.create_dataset(f"{group_name}/{k}", data=v)
+        else:
+            h5file.create_group(f"{group_name}/{k}")
+            store_dict_to_h5(v, h5file, f"{group_name}/{k}")
+
+
+def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, update_matrix=None, plotting_this_iteration=False, save_all_data_this_iteration=False, hdf_file = None):
     if acc is not None:
         _run.log_scalar("Ratio activated", sum(acc)/len(acc), sim_info['time_step_index'])
         _run.log_scalar("Mass ratio activated", sum(ms*acc)/sum(ms), sim_info['time_step_index'])
@@ -45,14 +55,21 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
                 'pVs' : pVs.tolist() ,
                 'acc' : acc.tolist() ,
                 'ms'  : ms.tolist() ,
-                'fXs' : fXs.tolist() ,
-                'fVs' : fVs.tolist() ,
-                'sim_info' : sim_info
+                'update_matrix': update_matrix.tolist(),
+                'sim_info' : sim_info,
            }
-        dump_file_loc = f"{sim_info['data_dir']}/data_dump-{sim_info['time_step_index']}.json"
-        with open(dump_file_loc, 'w') as f:
-            json.dump(d,f, indent=4)
-            ex.add_artifact(dump_file_loc)
+        if hdf_file is None:
+            dump_file_loc = f"{sim_info['data_dir']}/data_dump-{sim_info['time_step_index']}.json"
+            with open(dump_file_loc, 'w') as f:
+                json.dump(d,f, indent=4)
+        else:
+            dump_file_loc = f"{sim_info['data_dir']}/{hdf_file}.h5"
+            with h5py.File(dump_file_loc, 'a') as f:
+                group_name = f"iteration_{sim_info['time_step_index']}"
+                f.create_group(group_name)
+                store_dict_to_h5(d, f, group_name=group_name)
+
+        ex.add_artifact(dump_file_loc)
 
     if plotting_this_iteration:
         if _config.get('mixing_experiment',False):
@@ -73,8 +90,8 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, pl
                       SAVEFIG=_config['SAVEFIG'],
                       ex=ex,
                       plot_particles=True,
-                      plot_fluids=True,
-                      side_by_side=True,
+                      plot_fluids=False,
+                      side_by_side=False,
                       fluid_plot_type = 'quiver')
 
 def do_one_timestep_correlation_measurement(ex, _config, _run, sim_info, pXs, pXs_old):
