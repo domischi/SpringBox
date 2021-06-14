@@ -204,7 +204,7 @@ def integrate_one_timestep(pXs,
 
     if _config.get('periodic_boundary', False):
         pXs, pVs, acc = periodic_boundary(pXs, pVs, acc, _config, sim_info)
-    if _config['brownian_motion_delta'] > 0:
+    if _config.get('brownian_motion_delta', 0) > 0:
          pVs += _config['brownian_motion_delta'] * np.sqrt(_config['dt'])*np.random.normal(size=pXs.shape) / _config['dt'] # so that the average dx scales with sqrt(dt)
     if 'window_velocity' in _config and np.linalg.norm(_config['window_velocity']) > 0:
         pXs, pVs, acc = create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info)
