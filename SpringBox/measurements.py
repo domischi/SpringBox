@@ -60,7 +60,7 @@ def do_measurements(ex, _config, _run, sim_info, pXs, pVs, acc, ms, fXs, fVs, up
                 'pVs' : pVs.tolist() ,
                 'acc' : acc.tolist() ,
                 'ms'  : ms.tolist() ,
-                'update_matrix': update_matrix.tolist(),
+                'update_matrix': update_matrix.tolist() if not update_matrix is None else None,
                 'sim_info' : sim_info,
            }
         if hdf_file is None:
