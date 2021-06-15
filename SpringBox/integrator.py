@@ -189,7 +189,6 @@ def integrate_one_timestep(pXs,
                            ):
     dt = _config['dt']
     Rdrag = _config['Rdrag']
-    mu = _config['mu']
     if not inverted_update:
         pXs = pXs + dt * pVs
     rhs, acc, M = RHS(pXs, acc,activation_fn, _config=_config, compute_update_matrix=sim_info.get('compute_update_matrix', False))
@@ -210,6 +209,7 @@ def integrate_one_timestep(pXs,
         pXs, pVs, acc = create_and_destroy_particles(pXs, pVs, acc, ms, _config, sim_info)
     if Rdrag > 0:
         raise RuntimeError('Fluids implementation is broken, please do not use this module.')
+        mu = _config['mu']
         if use_interpolated_fluid_velocities:
             fVs = fVs_on_particles(pXs, pVs, sim_info=sim_info, res=32, spline_degree=3, mu=mu)
         else:
