@@ -31,7 +31,7 @@ def activation_fn_dispatcher(_config, t, **kwargs):
     if   _config['activation_fn_type'] == 'const-rectangle':
         return lambda ps: rectangle_activation(ps, _config['AR'])
     elif _config['activation_fn_type'] == 'moving-circle':
-        return lambda ps: moving_circle_activation(ps,_config['v_circ']*t+_config['x_0_circ'],_config['activation_circle_radius'])
+        return lambda ps: moving_circle_activation(ps,np.array(_config['v_circ'])*t+np.array(_config['x_0_circ']),_config['activation_circle_radius'])
     elif _config['activation_fn_type'] == 'dumbbell':
         return lambda ps: dumbbell_activation(ps, _config['activation_circle_radius'], _config['dumbbell_dist'], _config['dumbbell_width'])
     elif _config['activation_fn_type'] == 'activation_matrix':
