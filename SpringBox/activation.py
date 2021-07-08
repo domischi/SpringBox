@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import imageio
 
 def inactive_activation_fn(ps):
     return np.zeros(len(ps)).astype(np.byte)
@@ -26,6 +28,19 @@ def activation_pattern(ps, X, Y, A):
     assert(min(ret_val)>=-1 and max(ret_val)<=1)
     return ret_val
 
+def rgb2gray(rgb):
+    return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
+
+def activation_pattern_from_image_path(ps, fname, L):
+    activation_mat = imageio.imread(fname) # Inefficient as it is done in every timestep, but specifically with eventual video hardly avoidable
+    activation_mat = rgb2gray(activation_mat) # Make it gray scale
+    activation_mat = activation_mat/255. # normalize it properly
+    activation_mat = (activation_mat>0.5).astype('int8') # binarzie
+    activation_mat = np.rot90(activation_mat, k=3) # rotate the same way up as input
+    nx = activation_mat.shape[0]
+    X = np.linspace(-L, L, num=nx, endpoint=False) ## Assume square image
+    return activation_pattern(ps, X, X, activation_mat)
+
 
 def activation_fn_dispatcher(_config, t, **kwargs):
     if   _config['activation_fn_type'] == 'const-rectangle':
@@ -38,7 +53,10 @@ def activation_fn_dispatcher(_config, t, **kwargs):
         assert('lx' in kwargs)
         assert('ly' in kwargs)
         assert('lh' in kwargs)
-
         return lambda ps: activation_pattern(ps, kwargs['lx'], kwargs['ly'], kwargs['lh'])
+    elif _config['activation_fn_type'] == 'image':
+        fpath = _config['activation_image_filepath']
+        assert(os.path.exists(fpath))
+        return lambda ps: activation_pattern_from_image_path(ps, fpath, _config["L"])
     else:
         raise RuntimeError('Unrecognized activation_fn_type')
