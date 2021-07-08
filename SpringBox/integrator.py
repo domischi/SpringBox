@@ -188,7 +188,7 @@ def integrate_one_timestep(pXs,
                            inverted_update=False,
                            ):
     dt = _config['dt']
-    Rdrag = _config['Rdrag']
+    Rdrag = _config.get('Rdrag', 0.)
     if not inverted_update:
         pXs = pXs + dt * pVs
     rhs, acc, M = RHS(pXs, acc,activation_fn, _config=_config, compute_update_matrix=sim_info.get('compute_update_matrix', False))
@@ -197,7 +197,7 @@ def integrate_one_timestep(pXs,
         M*=dt**2
         M = M/ms[:,np.newaxis]
         M+=np.identity(len(pXs))
-    pVs = (1-_config['drag_factor'])*pVs + dt * rhs / ms[:,np.newaxis]
+    pVs = (1-_config.get('drag_factor', 1))*pVs + dt * rhs / ms[:,np.newaxis]
     if inverted_update:
         pXs = pXs + dt * pVs
 
