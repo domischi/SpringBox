@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import imageio
+import glob
 
 def inactive_activation_fn(ps):
     return np.zeros(len(ps)).astype(np.byte)
@@ -31,7 +32,8 @@ def activation_pattern(ps, X, Y, A):
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
 
-def activation_pattern_from_image_path(ps, fname, L):
+def activation_pattern_from_image_path(ps, fname, L, ex):
+    ex.add_resource(fname)
     activation_mat = imageio.imread(fname) # Inefficient as it is done in every timestep, but specifically with eventual video hardly avoidable
     activation_mat = rgb2gray(activation_mat) # Make it gray scale
     activation_mat = activation_mat/255. # normalize it properly
@@ -40,6 +42,11 @@ def activation_pattern_from_image_path(ps, fname, L):
     nx = activation_mat.shape[0]
     X = np.linspace(-L, L, num=nx, endpoint=False) ## Assume square image
     return activation_pattern(ps, X, X, activation_mat)
+
+def activation_pattern_from_video(ps, fpath, t, T, L, ex):
+    flist = sorted(glob.glob(fpath))
+    index = min(int(len(flist)*t/T), len(flist)-1)
+    return activation_pattern_from_image_path(ps, flist[index], L, ex)
 
 
 def activation_fn_dispatcher(_config, t, **kwargs):
@@ -57,6 +64,9 @@ def activation_fn_dispatcher(_config, t, **kwargs):
     elif _config['activation_fn_type'] == 'image':
         fpath = _config['activation_image_filepath']
         assert(os.path.exists(fpath))
-        return lambda ps: activation_pattern_from_image_path(ps, fpath, _config["L"])
+        return lambda ps: activation_pattern_from_image_path(ps, fpath, _config["L"], kwargs['experiment'])
+    elif _config['activation_fn_type'] == 'video':
+        fpath = _config['activation_image_filepath']
+        return lambda ps: activation_pattern_from_video(ps, fpath, t=t, T=_config["T"], L=_config["L"], ex=kwargs['experiment'])
     else:
         raise RuntimeError('Unrecognized activation_fn_type')

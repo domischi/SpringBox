@@ -24,7 +24,7 @@ ex = Experiment('SpringBox')
 #ex.observers.append(MongoObserver.create())
 ex.observers.append(FileStorageObserver.create(f'data/'))
 
-activation_image = 'activation.png'
+activation_image = 'activation-*.png'
 ex.dependencies.add(PackageDependency("SpringBox",SpringBox.__version__))
 
 @ex.config
@@ -34,21 +34,21 @@ def cfg():
     savefreq_data_dump = 1
     # Speeds up the computation somewhat, but incurs an error due to oversmoothing of fluids (which could however be somewhat physical)
     dt=.01
-    T=.2
+    T=8*dt
     particle_density = 310
     MAKE_VIDEO = True
     SAVEFIG    = True
     const_particle_density = False
 
     ## Geometry parameters / Activation Fn
-    activation_fn_type = 'image' # For the possible choices, see the activation.py file
+    activation_fn_type = 'video' # For the possible choices, see the activation.py file
     activation_image_filepath = activation_image
     L=2
     n_part = particle_density * ((2*L)**2)
 
     ## Interaction parameters
     # Particle properties
-    activation_decay_rate = 10. # Ex. at dt=0.01 this leads to an average deactivation of 10% of the particles
+    activation_decay_rate = np.Infinity
     # Spring properties
     spring_cutoff = 2.
     spring_lower_cutoff = 1e-3
