@@ -24,7 +24,6 @@ ex = Experiment('SpringBox')
 #ex.observers.append(MongoObserver.create())
 ex.observers.append(FileStorageObserver.create(f'data/'))
 
-activation_image = 'activation.png'
 ex.dependencies.add(PackageDependency("SpringBox",SpringBox.__version__))
 
 @ex.config
@@ -42,7 +41,7 @@ def cfg():
 
     ## Geometry parameters / Activation Fn
     activation_fn_type = 'image' # For the possible choices, see the activation.py file
-    activation_image_filepath = activation_image
+    activation_image_filepath = 'activation.png'
     L=2
     n_part = particle_density * ((2*L)**2)
 

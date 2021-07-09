@@ -30,7 +30,12 @@ def activation_pattern(ps, X, Y, A):
     return ret_val
 
 def rgb2gray(rgb):
-    return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
+    if len(rgb.shape)<2:
+        raise RuntimeError(f"Unable to convert image of dimensions {rgb.shape} to greyscale.")
+    elif len(rgb.shape)==2:
+        return rgb
+    else:
+        return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
 
 def activation_pattern_from_image_path(ps, fname, L, ex):
     ex.add_resource(fname)
