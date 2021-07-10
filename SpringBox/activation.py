@@ -41,7 +41,10 @@ def activation_pattern_from_image_path(ps, fname, L, ex):
     ex.add_resource(fname)
     activation_mat = imageio.imread(fname) # Inefficient as it is done in every timestep, but specifically with eventual video hardly avoidable
     activation_mat = rgb2gray(activation_mat) # Make it gray scale
-    activation_mat = activation_mat/255. # normalize it properly
+    if np.max(activation_mat)<20:
+        raise RuntimeWarning(f'max value of activation_matrix is below 20, namely {np.max(activation_mat)=}')
+    else:
+        activation_mat = activation_mat/255. # normalize it properly
     activation_mat = (activation_mat>0.5).astype('int8') # binarzie
     activation_mat = np.rot90(activation_mat, k=3) # rotate the same way up as input
     nx = activation_mat.shape[0]
