@@ -29,11 +29,15 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
     a = s*acc > 0
     Iij = Dij * np.outer(a, a)
     Iij = (Iij > slc) * (Iij < suc)
+    added_smth_to_rhs = False
     for i in range(n_part):
         for j in range(i + 1, n_part):
             if Iij[i, j] != 0:
                 rhs[i] += - k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
                 rhs[j] += + k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
+                if not added_smth_to_rhs:
+                    print('here', i, j, rhs[i])
+                added_smth_to_rhs = True
                 if not M is None:
                     M[i,j]+=k * ((Dij[i, j] - r0) / Dij[i, j])
                     M[j,i]+=k * ((Dij[i, j] - r0) / Dij[i, j])
@@ -53,12 +57,8 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
         print('max(Dij)',np.max(abs(Dij)))
         print('sum(Iij)',np.sum(Iij))
         print('sum(a)',sum(a))
-        for i in range(n_part):
-            for j in range(i + 1, n_part):
-                print(str(i)+" "+str(j), end='')
-                if Iij[i, j] != 0:
-                    print(" "+str(- k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]), end='')
-                print('')
+        print(type(rhs))
+        print(rhs.shape)
         raise RuntimeWarning("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
     return rhs
 
