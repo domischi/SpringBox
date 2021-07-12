@@ -198,6 +198,8 @@ def integrate_one_timestep(pXs,
         M = M/ms[:,np.newaxis]
         M+=np.identity(len(pXs))
     pVs = (1-_config.get('drag_factor', 1))*pVs + dt * rhs / ms[:,np.newaxis]
+    if np.isclose(np.max(abs(pVs)), 0):
+        raise RuntimeWarning(f"Speed update is vanishing. Largest pVs is {np.max(abs(pVs))}!")
     if inverted_update:
         pXs = pXs + dt * pVs
 
