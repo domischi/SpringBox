@@ -35,8 +35,8 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
             if Iij[i, j] != 0:
                 rhs[i] += - k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
                 rhs[j] += + k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
-                if not added_smth_to_rhs:
-                    print('here', i, j, rhs[i])
+                #if not added_smth_to_rhs:
+                #    print('here', i, j, rhs[i])
                 added_smth_to_rhs = True
                 if not M is None:
                     M[i,j]+=k * ((Dij[i, j] - r0) / Dij[i, j])
