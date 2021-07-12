@@ -39,7 +39,7 @@ def rgb2gray(rgb):
 
 def activation_pattern_from_image_path(ps, fname, L, ex):
     ex.add_resource(fname)
-    activation_mat = imageio.imread(fname) # Inefficient as it is done in every timestep, but specifically with eventual video hardly avoidable
+    activation_mat = np.asarray(imageio.imread(fname)) # Inefficient as it is done in every timestep, but specifically with eventual video hardly avoidable
     activation_mat = rgb2gray(activation_mat) # Make it gray scale
     if np.max(activation_mat)<20:
         raise RuntimeWarning(f'max value of activation_matrix is below 20, namely {np.max(activation_mat)}')
