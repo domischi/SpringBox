@@ -17,7 +17,7 @@ def active_particles(pXs, prv_acc, activation_fn, _config):
     return acc
 
 
-@numba.jit
+#@numba.jit
 def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
     s=-1 if repulsive else 1
     rhs = np.zeros_like(pXs)
@@ -29,7 +29,7 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
     a = s*acc > 0
     Iij = Dij * np.outer(a, a)
     Iij = (Iij > slc) * (Iij < suc)
-    added_smth_to_rhs = False
+    #added_smth_to_rhs = False
     for i in range(n_part):
         for j in range(i + 1, n_part):
             if Iij[i, j] != 0:
@@ -37,7 +37,7 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
                 rhs[j] += + k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
                 #if not added_smth_to_rhs:
                 #    print('here', i, j, rhs[i])
-                added_smth_to_rhs = True
+                #added_smth_to_rhs = True
                 if not M is None:
                     M[i,j]+=k * ((Dij[i, j] - r0) / Dij[i, j])
                     M[j,i]+=k * ((Dij[i, j] - r0) / Dij[i, j])
