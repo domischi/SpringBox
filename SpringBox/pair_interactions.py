@@ -53,6 +53,12 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
         print('max(Dij)',np.max(abs(Dij)))
         print('sum(Iij)',np.sum(Iij))
         print('sum(a)',sum(a))
+        for i in range(n_part):
+            for j in range(i + 1, n_part):
+                print(str(i)+" "+str(j), end='')
+                if Iij[i, j] != 0:
+                    print(" "+str(- k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]), end='')
+                print('')
         raise RuntimeWarning("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
     return rhs
 
