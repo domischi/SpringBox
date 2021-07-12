@@ -40,6 +40,19 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
                     M[i,i]-=k * ((Dij[i, j] - r0) / Dij[i, j])
                     M[j,j]-=k * ((Dij[i, j] - r0) / Dij[i, j]) ## Because in the loop before we work with dpXs = x_i-x_j
     if np.isclose(np.max(abs(rhs)), 0): 
+        print("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
+        print('k',k)
+        print('slc',slc)
+        print('suc',suc)
+        print('r0',r0)
+        print('n_part',n_part)
+        print('k',k)
+        print('max(Dij)',type(Dij))
+        print('sum(Iij)',type(Iij))
+        print('sum(a)',type(a))
+        print('max(Dij)',np.max(abs(Dij)))
+        print('sum(Iij)',np.sum(Iij))
+        print('sum(a)',sum(a))
         raise RuntimeWarning("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
     return rhs
 
