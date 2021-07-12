@@ -17,7 +17,7 @@ def active_particles(pXs, prv_acc, activation_fn, _config):
     return acc
 
 
-#@numba.jit
+#@numba.jit # No big change in speed, but can break on AWS with image activation data (unknown reason)
 def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
     s=-1 if repulsive else 1
     rhs = np.zeros_like(pXs)
@@ -29,37 +29,19 @@ def spring_forces(acc, pXs, Dij, dpXs, _config, repulsive=False, M=None):
     a = s*acc > 0
     Iij = Dij * np.outer(a, a)
     Iij = (Iij > slc) * (Iij < suc)
-    #added_smth_to_rhs = False
     for i in range(n_part):
         for j in range(i + 1, n_part):
             if Iij[i, j] != 0:
                 rhs[i] += - k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
                 rhs[j] += + k * ((Dij[i, j] - r0) / Dij[i, j]) * dpXs[i][j]
-                #if not added_smth_to_rhs:
-                #    print('here', i, j, rhs[i])
-                #added_smth_to_rhs = True
                 if not M is None:
                     M[i,j]+=k * ((Dij[i, j] - r0) / Dij[i, j])
                     M[j,i]+=k * ((Dij[i, j] - r0) / Dij[i, j])
                     M[i,i]-=k * ((Dij[i, j] - r0) / Dij[i, j])
                     M[j,j]-=k * ((Dij[i, j] - r0) / Dij[i, j]) ## Because in the loop before we work with dpXs = x_i-x_j
-    if np.isclose(np.max(abs(rhs)), 0): 
-        #print("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
-        #print('k',k)
-        #print('slc',slc)
-        #print('suc',suc)
-        #print('r0',r0)
-        #print('n_part',n_part)
-        #print('k',k)
-        #print('max(Dij)',type(Dij))
-        #print('sum(Iij)',type(Iij))
-        #print('sum(a)',type(a))
-        #print('max(Dij)',np.max(abs(Dij)))
-        #print('sum(Iij)',np.sum(Iij))
-        #print('sum(a)',sum(a))
-        #print(type(rhs))
-        #print(rhs.shape)
-        raise RuntimeWarning("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
+    ## Deactivate for now, as there could be valid reasons for this to be zero
+    #if np.isclose(np.max(abs(rhs)), 0): 
+    #    raise RuntimeWarning("Computed Spring Forces are all almost zero. Largest value encountered: "+ str(np.max(abs(rhs))))
     return rhs
 
 
