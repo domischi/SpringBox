@@ -7,7 +7,7 @@ gitdb==4.0.2
 GitPython==3.1.0
 h5py==2.10.0
 imageio
-ipython==7.16.3
+ipython==8.10.0
 ipython-genutils==0.2.0
 jedi==0.16.0
 jsonpickle==1.3
